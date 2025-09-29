@@ -3,201 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autenticación Monocromática Standalone</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Electrolandia - Sistema de Autenticación</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'neutral-dark': '#1F2937',
-                        'neutral-medium': '#4B5563',
-                        'neutral-light': '#D1D5DB',
-                        'neutral-bg': '#F3F4F6',
-                        'error-bg': '#FEF2F2',
-                        'error-text': '#B91C1C',
-                        'success-bg': '#F0FDF4',
-                        'success-text': '#166534',
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F9FAFB;
         }
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1E40AF 0%, #7C3AED 100%);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1E3A8A 0%, #6D28D9 100%);
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-
-    <!-- Contenedor Principal -->
-    <div id="app-container" class="w-full max-w-md bg-white rounded-xl shadow-2xl p-6 md:p-8 transform scale-95 opacity-0 transition-all duration-300">
-        <h1 class="text-3xl font-bold text-center text-neutral-dark mb-6">Acceso Monocromático</h1>
-
-        <!-- Indicador de Carga -->
-        <div id="loading-indicator" class="hidden mb-4 text-center">
-            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-neutral-dark"></div>
-            <span class="ml-2 text-neutral-medium">Procesando...</span>
+<body class="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 flex items-center justify-center p-4">
+    
+    <!-- Aplicación Principal -->
+    <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full fade-in">
+        
+        <!-- Estado de Carga -->
+        <div id="loading-state" class="text-center py-8">
+            <div class="inline-flex items-center justify-center">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+            </div>
+            <p class="text-gray-600 text-sm">Inicializando Electrolandia...</p>
         </div>
 
-        <!-- Pestañas -->
-        <div class="flex bg-neutral-bg rounded-lg p-1 mb-6">
-            <button id="login-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300 bg-neutral-dark text-white shadow-lg shadow-neutral-medium/50">
-                Iniciar Sesión
-            </button>
-            <button id="register-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300 text-neutral-medium hover:bg-neutral-light" onclick="switchView('register')">
-                Registrarse
-            </button>
+        <!-- Contenido de la App -->
+        <div id="app-content" class="hidden">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold text-xl">⚡</span>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800">Electrolandia</h1>
+                <p class="text-gray-600 mt-2">Sistema de Autenticación Segura</p>
+            </div>
+
+            <!-- Pestañas -->
+            <div class="flex bg-gray-100 rounded-xl p-1 mb-6">
+                <button id="login-tab" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 bg-gray-800 text-white shadow-lg transform scale-105">
+                    Iniciar Sesión
+                </button>
+                <button id="register-tab" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-200 transform scale-100" onclick="switchView('register')">
+                    Registrarse
+                </button>
+            </div>
+
+            <!-- Vista Login -->
+            <div id="login-view" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                    <input type="email" id="login-email" placeholder="usuario@electrolandia.com" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="login-password" placeholder="••••••••" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                </div>
+                <button onclick="handleLogin()" 
+                        class="w-full btn-primary text-white font-bold py-3 rounded-lg hover:shadow-lg transition duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-2">
+                    Iniciar Sesión
+                </button>
+            </div>
+
+            <!-- Vista Registro -->
+            <div id="register-view" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                    <input type="email" id="register-email" placeholder="usuario@electrolandia.com" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                    <input type="password" id="register-password" placeholder="Mínimo 6 caracteres" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                </div>
+                <button onclick="handleRegister()" 
+                        class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-3 rounded-lg hover:from-green-600 hover:to-blue-600 transition duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-2">
+                    Crear Cuenta
+                </button>
+            </div>
+
+            <!-- Mensajes -->
+            <div id="message-box" class="mt-6 p-4 rounded-lg hidden animate-pulse"></div>
+
+            <!-- Información Usuario -->
+            <div id="user-info" class="hidden mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="text-white font-bold text-lg">✓</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">¡Sesión Iniciada!</h3>
+                    <p id="user-email" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <button onclick="handleLogout()" 
+                        class="w-full mt-4 bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-700 transition duration-200">
+                    Cerrar Sesión
+                </button>
+            </div>
         </div>
 
-        <!-- Vista de Login -->
-        <div id="login-view" class="space-y-4">
-            <input type="email" id="login-email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <input type="password" id="login-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <button onclick="handleLogin()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40 disabled:opacity-50 disabled:cursor-not-allowed">
-                Entrar
-            </button>
+        <!-- Error de Configuración -->
+        <div id="config-error" class="hidden text-center py-6">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-red-600 text-2xl">⚠️</span>
+            </div>
+            <h3 class="font-bold text-red-700 mb-2">Error de Configuración</h3>
+            <p id="error-message" class="text-red-600 text-sm"></p>
         </div>
-
-        <!-- Vista de Registro -->
-        <div id="register-view" class="space-y-4 hidden">
-            <input type="email" id="register-email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <input type="password" id="register-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <button onclick="handleRegister()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40 disabled:opacity-50 disabled:cursor-not-allowed">
-                Crear Cuenta
-            </button>
-        </div>
-
-        <!-- Mensaje de Estado -->
-        <div id="message-box" class="mt-6 p-3 rounded-lg hidden" role="alert"></div>
     </div>
 
-    <!-- Script Corregido -->
+    <!-- Firebase y Lógica de la App -->
     <script type="module">
-        // Importaciones de Firebase - VERSIÓN CORREGIDA
-        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
-        // Configuración de Firebase (¡CONSIDERAR MOVER A VARIABLES DE ENTORNO!)
+        // ==================================================
+        // CONFIGURACIÓN FIREBASE - ELECTROLANDIA (TU CONFIGURACIÓN EXACTA)
+        // ==================================================
         const firebaseConfig = {
-            apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
-            authDomain: "fir-electrolandiaiii.firebaseapp.com",
-            projectId: "fir-electrolandiaiii",
-            storageBucket: "fir-electrolandiaiii.firebasestorage.app",
-            messagingSenderId: "378459653043",
-            appId: "1:378459653043:web:2a76b998c3c5bb459d81c6"
+            apiKey: "AIzaSyDSy4dLsNpqrD3X3buB2NL3bPF_yS2CEdQ",
+            authDomain: "electrolandia-auth.firebaseapp.com",
+            projectId: "electrolandia-auth",
+            storageBucket: "electrolandia-auth.firebasestorage.app",
+            messagingSenderId: "734527707729",
+            appId: "1:734527707729:web:b31933a802104fb7c4b670"
         };
 
-        // Variables Globales
-        let app, db, auth, userId = null;
+        // ==================================================
+        // IMPORTACIONES FIREBASE - VERSIÓN 12.3.0 (TU VERSIÓN EXACTA)
+        // ==================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc 
+        } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-        // Referencias DOM
-        const elements = {
-            loginView: document.getElementById('login-view'),
-            registerView: document.getElementById('register-view'),
-            loginTab: document.getElementById('login-tab'),
-            registerTab: document.getElementById('register-tab'),
-            messageBox: document.getElementById('message-box'),
-            appContainer: document.getElementById('app-container'),
-            loadingIndicator: document.getElementById('loading-indicator')
-        };
+        let auth, db;
 
-        // Clases para estado
-        const ACTIVE_CLASSES = 'bg-neutral-dark text-white shadow-lg shadow-neutral-medium/50';
-        const INACTIVE_CLASSES = 'text-neutral-medium hover:bg-neutral-light';
+        // ==================================================
+        // INICIALIZACIÓN FIREBASE
+        // ==================================================
+        async function initializeFirebase() {
+            try {
+                console.log('🔄 Inicializando Firebase para Electrolandia...');
+                
+                // Validar configuración
+                if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+                    throw new Error('Configuración de Firebase incompleta');
+                }
 
-        // Utilidades
-        function toggleClasses(element, classesString, add) {
-            if (!element || !classesString) return;
-            const classes = classesString.split(' ').filter(c => c.length > 0);
-            element.classList[add ? 'add' : 'remove'](...classes);
+                // Inicializar Firebase
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                console.log('✅ Firebase inicializado correctamente');
+                console.log('🔧 Proyecto:', firebaseConfig.projectId);
+
+                // Configurar observador de autenticación
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        handleUserLoggedIn(user);
+                    } else {
+                        handleUserLoggedOut();
+                    }
+                });
+
+                // Mostrar aplicación
+                showApp();
+
+            } catch (error) {
+                console.error('❌ Error al inicializar Firebase:', error);
+                showConfigError(error.message);
+            }
         }
 
-        function setLoading(isLoading) {
-            if (isLoading) {
-                elements.loadingIndicator.classList.remove('hidden');
-                elements.appContainer.classList.add('loading');
-            } else {
-                elements.loadingIndicator.classList.add('hidden');
-                elements.appContainer.classList.remove('loading');
-            }
+        // ==================================================
+        // INTERFAZ DE USUARIO
+        // ==================================================
+        function showApp() {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('config-error').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
+            switchView('login');
+        }
+
+        function showConfigError(message) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('app-content').classList.add('hidden');
+            document.getElementById('config-error').classList.remove('hidden');
+            document.getElementById('error-message').textContent = message;
         }
 
         function showMessage(message, type = 'error') {
-            elements.messageBox.textContent = message;
-            elements.messageBox.classList.remove('hidden', 'bg-error-bg', 'text-error-text', 'bg-success-bg', 'text-success-text');
+            const messageBox = document.getElementById('message-box');
+            messageBox.textContent = message;
+            messageBox.className = 'mt-6 p-4 rounded-lg animate-pulse';
             
             if (type === 'success') {
-                elements.messageBox.classList.add('bg-success-bg', 'text-success-text');
+                messageBox.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-200');
             } else {
-                elements.messageBox.classList.add('bg-error-bg', 'text-error-text');
+                messageBox.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-200');
+            }
+            messageBox.classList.remove('hidden');
+            
+            // Auto-ocultar mensajes de éxito después de 4 segundos
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 4000);
             }
         }
 
-        // Navegación entre vistas
+        function setLoading(loading) {
+            const loginButton = document.querySelector('#login-view button');
+            const registerButton = document.querySelector('#register-view button');
+            
+            if (loginButton) {
+                loginButton.disabled = loading;
+                if (loading) {
+                    loginButton.innerHTML = '<div class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Procesando...';
+                } else {
+                    loginButton.textContent = 'Iniciar Sesión';
+                }
+            }
+            
+            if (registerButton) {
+                registerButton.disabled = loading;
+                if (loading) {
+                    registerButton.innerHTML = '<div class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Creando...';
+                } else {
+                    registerButton.textContent = 'Crear Cuenta';
+                }
+            }
+        }
+
+        // ==================================================
+        // NAVEGACIÓN Y AUTENTICACIÓN
+        // ==================================================
         window.switchView = (view) => {
             const isLogin = view === 'login';
             
             // Mostrar/ocultar vistas
-            elements.loginView.classList.toggle('hidden', !isLogin);
-            elements.registerView.classList.toggle('hidden', isLogin);
+            document.getElementById('login-view').classList.toggle('hidden', !isLogin);
+            document.getElementById('register-view').classList.toggle('hidden', isLogin);
             
             // Actualizar pestañas
-            toggleClasses(elements.loginTab, ACTIVE_CLASSES, isLogin);
-            toggleClasses(elements.loginTab, INACTIVE_CLASSES, !isLogin);
-            toggleClasses(elements.registerTab, ACTIVE_CLASSES, !isLogin);
-            toggleClasses(elements.registerTab, INACTIVE_CLASSES, isLogin);
+            const activeClasses = 'bg-gray-800 text-white shadow-lg transform scale-105';
+            const inactiveClasses = 'text-gray-600 hover:bg-gray-200 transform scale-100';
             
-            // Ocultar mensajes
-            elements.messageBox.classList.add('hidden');
+            document.getElementById('login-tab').className = `flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 ${isLogin ? activeClasses : inactiveClasses}`;
+            document.getElementById('register-tab').className = `flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 ${!isLogin ? activeClasses : inactiveClasses}`;
+            
+            // Limpiar mensajes y campos
+            document.getElementById('message-box').classList.add('hidden');
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('register-email').value = '';
+            document.getElementById('register-password').value = '';
         };
 
-        // Inicialización de Firebase
-        function initializeFirebase() {
-            try {
-                if (getApps().length === 0) {
-                    app = initializeApp(firebaseConfig);
-                } else {
-                    app = getApps()[0];
-                }
-                
-                auth = getAuth(app);
-                db = getFirestore(app);
-                
-                // Observador de autenticación
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log('Usuario autenticado:', userId);
-                        showMessage('Sesión iniciada correctamente', 'success');
-                        // Aquí puedes redirigir o actualizar la UI
-                    } else {
-                        userId = null;
-                        console.log('Usuario deslogueado.');
-                    }
-                });
-
-                // Mostrar UI
-                elements.appContainer.classList.remove('scale-95', 'opacity-0');
-                switchView('login');
-
-            } catch (error) {
-                console.error("Error al inicializar Firebase:", error);
-                showMessage(`Error de inicialización: ${error.message}`);
-            }
+        function handleUserLoggedIn(user) {
+            console.log('👤 Usuario autenticado:', user.email);
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('register-view').classList.add('hidden');
+            showMessage(`¡Bienvenido ${user.email}!`, 'success');
         }
 
-        // Manejadores de autenticación
+        function handleUserLoggedOut() {
+            console.log('🚪 Usuario desconectado');
+            document.getElementById('user-info').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+            switchView('login');
+        }
+
         window.handleLogin = async () => {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -210,25 +308,27 @@
             setLoading(true);
             
             try {
-                if (!auth) throw new Error("Firebase Auth no está inicializado");
-                
                 await signInWithEmailAndPassword(auth, email, password);
                 showMessage('Inicio de sesión exitoso', 'success');
-                
             } catch (error) {
-                console.error("Error en login:", error);
+                console.error('Error en login:', error);
                 let errorMessage = "Error al iniciar sesión";
                 
                 switch (error.code) {
                     case 'auth/user-not-found':
+                        errorMessage = "No existe cuenta con este correo";
+                        break;
                     case 'auth/wrong-password':
-                        errorMessage = "Credenciales incorrectas";
+                        errorMessage = "Contraseña incorrecta";
                         break;
                     case 'auth/invalid-email':
-                        errorMessage = "Formato de email inválido";
+                        errorMessage = "Formato de correo inválido";
                         break;
                     case 'auth/too-many-requests':
                         errorMessage = "Demasiados intentos. Intenta más tarde";
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = "Error de conexión. Verifica tu internet";
                         break;
                     default:
                         errorMessage = `Error: ${error.message}`;
@@ -257,37 +357,44 @@
             setLoading(true);
             
             try {
-                if (!auth) throw new Error("Firebase Auth no está inicializado");
-                
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 
-                // Guardar perfil del usuario
-                const userRef = doc(db, "profiles", userCredential.user.uid);
-                await setDoc(userRef, {
-                    email: userCredential.user.email,
-                    createdAt: new Date().toISOString(),
-                    userId: userCredential.user.uid
-                });
+                // Guardar información adicional del usuario en Firestore
+                try {
+                    const userRef = doc(db, "users", userCredential.user.uid);
+                    await setDoc(userRef, {
+                        email: userCredential.user.email,
+                        createdAt: new Date().toISOString(),
+                        lastLogin: new Date().toISOString(),
+                        profileCompleted: false
+                    });
+                    console.log('✅ Usuario guardado en Firestore');
+                } catch (dbError) {
+                    console.warn('⚠️ Usuario creado pero error en Firestore:', dbError);
+                    // No mostramos error al usuario porque la cuenta SÍ se creó
+                }
 
-                showMessage('Cuenta creada exitosamente', 'success');
-                switchView('login');
+                showMessage('✅ Cuenta creada exitosamente. ¡Bienvenido a Electrolandia!', 'success');
                 
             } catch (error) {
-                console.error("Error en registro:", error);
+                console.error('Error en registro:', error);
                 let errorMessage = "Error al crear cuenta";
                 
                 switch (error.code) {
                     case 'auth/email-already-in-use':
-                        errorMessage = "El email ya está registrado";
+                        errorMessage = "Este correo ya está registrado";
                         break;
                     case 'auth/weak-password':
                         errorMessage = "La contraseña es muy débil";
                         break;
                     case 'auth/invalid-email':
-                        errorMessage = "Formato de email inválido";
+                        errorMessage = "Formato de correo inválido";
                         break;
                     case 'auth/operation-not-allowed':
-                        errorMessage = "Operación no permitida. Contacta al administrador";
+                        errorMessage = "La autenticación por correo no está habilitada. Verifica Firebase Console";
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = "Error de conexión. Verifica tu internet";
                         break;
                     default:
                         errorMessage = `Error: ${error.message}`;
@@ -299,7 +406,19 @@
             }
         };
 
-        // Inicializar la aplicación
+        window.handleLogout = async () => {
+            try {
+                await signOut(auth);
+                showMessage('Sesión cerrada correctamente', 'success');
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                showMessage('Error al cerrar sesión');
+            }
+        };
+
+        // ==================================================
+        // INICIAR APLICACIÓN
+        // ==================================================
         initializeFirebase();
     </script>
 </body>
