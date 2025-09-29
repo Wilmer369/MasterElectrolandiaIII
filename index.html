@@ -74,19 +74,12 @@
     <!-- Script de Firebase y Lógica de la Aplicación -->
     <script type="module">
         // Importaciones de Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // =========================================================================
-        // ¡INSERTA AQUÍ TU OBJETO firebaseConfig COMPLETO!
-        // Ejemplo:
-        // const firebaseConfig = {
-        //     apiKey: "AIzaSyC...",
-        //     authDomain: "mi-app-monocromatica.firebaseapp.com",
-        //     projectId: "mi-app-monocromatica",
-        //     // ... y el resto de los campos
-        // };
+        // Configuración de Firebase (Ya confirmada como correcta)
         // =========================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
@@ -166,35 +159,38 @@
         // Función de inicialización de Firebase
         function initializeFirebase() {
             try {
-                // Ya no hay validación, las credenciales están insertadas.
-
-                app = initializeApp(firebaseConfig);
+                // CORRECCIÓN CLAVE: Aseguramos que la aplicación solo se inicialice una vez.
+                // En ciertos entornos (como GitHub Pages con rutas modulares) esto puede causar el error.
+                if (getApps().length === 0) {
+                    app = initializeApp(firebaseConfig);
+                } else {
+                    app = getApps()[0]; // Reusa la app existente si ya está inicializada
+                }
+                
                 auth = getAuth(app);
-                // Inicialización de Firestore
                 db = getFirestore(app);
                 
-                // Observador de estado de autenticación (no requiere token inicial)
+                // Observador de estado de autenticación 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
                         console.log('Usuario autenticado:', userId);
-                        // Ocultar mensaje de error si había uno previo
                         messageBox.classList.add('hidden'); 
                     } else {
                         userId = null;
                         console.log('Usuario deslogueado.');
                     }
-                    // La línea para revelar la UI ha sido movida fuera de este listener
                 });
 
-                // CORRECCIÓN 2: Revelar la UI inmediatamente después de que Firebase se inicializa con éxito.
+                // Revelar la UI inmediatamente después de que Firebase se inicializa con éxito.
                 appContainer.classList.remove('scale-95', 'opacity-0');
                 
                 switchView('login');
 
             } catch (error) {
                 console.error("Error al inicializar Firebase:", error);
-                showMessage(`Error de inicialización: ${error.message}`, true);
+                // Si la configuración es incorrecta, mostramos un error claro en el cuadro de mensaje.
+                showMessage(`Error de inicialización (auth/configuración): ${error.message}`, true);
             }
         }
 
