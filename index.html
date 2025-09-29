@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electrolandia - Sistema de Autenticación</title>
+    <title>Electrolandia - Sistema Educativo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -13,9 +13,16 @@
         .fade-in {
             animation: fadeIn 0.6s ease-in-out;
         }
+        .slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
         .btn-primary {
             background: linear-gradient(135deg, #1E40AF 0%, #7C3AED 100%);
@@ -23,111 +30,384 @@
         .btn-primary:hover {
             background: linear-gradient(135deg, #1E3A8A 0%, #6D28D9 100%);
         }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 flex items-center justify-center p-4">
+<body class="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500">
     
     <!-- Aplicación Principal -->
-    <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full fade-in">
+    <div id="app-container" class="min-h-screen">
         
-        <!-- Estado de Carga -->
-        <div id="loading-state" class="text-center py-8">
-            <div class="inline-flex items-center justify-center">
-                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
-            </div>
-            <p class="text-gray-600 text-sm">Inicializando Electrolandia...</p>
-        </div>
-
-        <!-- Contenido de la App -->
-        <div id="app-content" class="hidden">
-            <!-- Header -->
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span class="text-white font-bold text-xl">⚡</span>
-                </div>
-                <h1 class="text-3xl font-bold text-gray-800">Electrolandia</h1>
-                <p class="text-gray-600 mt-2">Sistema de Autenticación Segura</p>
-            </div>
-
-            <!-- Pestañas -->
-            <div class="flex bg-gray-100 rounded-xl p-1 mb-6">
-                <button id="login-tab" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 bg-gray-800 text-white shadow-lg transform scale-105">
-                    Iniciar Sesión
-                </button>
-                <button id="register-tab" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-200 transform scale-100" onclick="switchView('register')">
-                    Registrarse
-                </button>
-            </div>
-
-            <!-- Vista Login -->
-            <div id="login-view" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-                    <input type="email" id="login-email" placeholder="usuario@electrolandia.com" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
-                    <input type="password" id="login-password" placeholder="••••••••" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
-                </div>
-                <button onclick="handleLogin()" 
-                        class="w-full btn-primary text-white font-bold py-3 rounded-lg hover:shadow-lg transition duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-2">
-                    Iniciar Sesión
-                </button>
-            </div>
-
-            <!-- Vista Registro -->
-            <div id="register-view" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-                    <input type="email" id="register-email" placeholder="usuario@electrolandia.com" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
-                    <input type="password" id="register-password" placeholder="Mínimo 6 caracteres" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
-                </div>
-                <button onclick="handleRegister()" 
-                        class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-3 rounded-lg hover:from-green-600 hover:to-blue-600 transition duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-2">
-                    Crear Cuenta
-                </button>
-            </div>
-
-            <!-- Mensajes -->
-            <div id="message-box" class="mt-6 p-4 rounded-lg hidden animate-pulse"></div>
-
-            <!-- Información Usuario -->
-            <div id="user-info" class="hidden mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
-                <div class="text-center">
-                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <span class="text-white font-bold text-lg">✓</span>
+        <!-- ===== PANTALLA DE AUTENTICACIÓN ===== -->
+        <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full fade-in">
+                
+                <!-- Estado de Carga -->
+                <div id="loading-state" class="text-center py-8">
+                    <div class="inline-flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
                     </div>
-                    <h3 class="font-semibold text-gray-800">¡Sesión Iniciada!</h3>
-                    <p id="user-email" class="text-sm text-gray-600 mt-1"></p>
+                    <p class="text-gray-600 text-sm">Inicializando Electrolandia...</p>
                 </div>
-                <button onclick="handleLogout()" 
-                        class="w-full mt-4 bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-700 transition duration-200">
-                    Cerrar Sesión
-                </button>
+
+                <!-- Contenido de Autenticación -->
+                <div id="auth-content" class="hidden">
+                    <!-- Header -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-white font-bold text-xl">⚡</span>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-800">Electrolandia</h1>
+                        <p class="text-gray-600 mt-2">Sistema Educativo Integral</p>
+                    </div>
+
+                    <!-- Pestañas -->
+                    <div class="flex bg-gray-100 rounded-xl p-1 mb-6">
+                        <button id="login-tab" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 bg-gray-800 text-white shadow-lg transform scale-105">
+                            Iniciar Sesión
+                        </button>
+                        <button id="register-tab" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-200 transform scale-100" onclick="switchView('register')">
+                            Registrarse
+                        </button>
+                    </div>
+
+                    <!-- Vista Login -->
+                    <div id="login-view" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                            <input type="email" id="login-email" placeholder="usuario@electrolandia.com" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                            <input type="password" id="login-password" placeholder="••••••••" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                        </div>
+                        <button onclick="handleLogin()" 
+                                class="w-full btn-primary text-white font-bold py-3 rounded-lg hover:shadow-lg transition duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-2">
+                            Iniciar Sesión
+                        </button>
+                    </div>
+
+                    <!-- Vista Registro -->
+                    <div id="register-view" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                            <input type="email" id="register-email" placeholder="usuario@electrolandia.com" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                            <input type="password" id="register-password" placeholder="Mínimo 6 caracteres" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400">
+                        </div>
+                        <button onclick="handleRegister()" 
+                                class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-3 rounded-lg hover:from-green-600 hover:to-blue-600 transition duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-2">
+                            Crear Cuenta
+                        </button>
+                    </div>
+
+                    <!-- Mensajes -->
+                    <div id="message-box" class="mt-6 p-4 rounded-lg hidden animate-pulse"></div>
+                </div>
+
+                <!-- Error de Configuración -->
+                <div id="config-error" class="hidden text-center py-6">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-red-600 text-2xl">⚠️</span>
+                    </div>
+                    <h3 class="font-bold text-red-700 mb-2">Error de Configuración</h3>
+                    <p id="error-message" class="text-red-600 text-sm"></p>
+                </div>
             </div>
         </div>
 
-        <!-- Error de Configuración -->
-        <div id="config-error" class="hidden text-center py-6">
-            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span class="text-red-600 text-2xl">⚠️</span>
-            </div>
-            <h3 class="font-bold text-red-700 mb-2">Error de Configuración</h3>
-            <p id="error-message" class="text-red-600 text-sm"></p>
+        <!-- ===== DASHBOARD PRINCIPAL (OCULTO INICIALMENTE) ===== -->
+        <div id="main-dashboard" class="hidden min-h-screen bg-gray-50">
+            
+            <!-- Header del Dashboard -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center py-4">
+                        <!-- Logo y Título -->
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                                <span class="text-white font-bold">⚡</span>
+                            </div>
+                            <h1 class="text-xl font-bold text-gray-800">Electrolandia</h1>
+                        </div>
+                        
+                        <!-- Información Usuario -->
+                        <div class="flex items-center space-x-4">
+                            <span id="user-welcome" class="text-sm text-gray-600">Bienvenido</span>
+                            <button onclick="handleLogout()" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navegación Principal -->
+            <nav class="bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex space-x-8 py-4">
+                        <button onclick="showSection('inicio')" 
+                                class="nav-btn text-gray-600 hover:text-blue-600 font-medium py-2 border-b-2 border-transparent hover:border-blue-500 transition duration-200"
+                                id="nav-inicio">
+                            🏠 Inicio
+                        </button>
+                        <button onclick="showSection('examenes')" 
+                                class="nav-btn text-gray-600 hover:text-blue-600 font-medium py-2 border-b-2 border-transparent hover:border-blue-500 transition duration-200"
+                                id="nav-examenes">
+                            📝 Exámenes
+                        </button>
+                        <button onclick="showSection('material')" 
+                                class="nav-btn text-gray-600 hover:text-blue-600 font-medium py-2 border-b-2 border-transparent hover:border-blue-500 transition duration-200"
+                                id="nav-material">
+                            📚 Material de Estudio
+                        </button>
+                        <button onclick="showSection('progreso')" 
+                                class="nav-btn text-gray-600 hover:text-blue-600 font-medium py-2 border-b-2 border-transparent hover:border-blue-500 transition duration-200"
+                                id="nav-progreso">
+                            📊 Mi Progreso
+                        </button>
+                        <button onclick="showSection('acerca')" 
+                                class="nav-btn text-gray-600 hover:text-blue-600 font-medium py-2 border-b-2 border-transparent hover:border-blue-500 transition duration-200"
+                                id="nav-acerca">
+                            ℹ️ Acerca de
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Contenido Principal -->
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                
+                <!-- Sección INICIO -->
+                <div id="section-inicio" class="section-content fade-in">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">Bienvenido a Electrolandia</h2>
+                        <p class="text-gray-600 text-lg">Tu plataforma educativa para el aprendizaje de electricidad y electrónica</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Tarjeta Exámenes -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover cursor-pointer" onclick="showSection('examenes')">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                                <span class="text-blue-600 text-xl">📝</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Exámenes</h3>
+                            <p class="text-gray-600 mb-4">Realiza evaluaciones para poner a prueba tus conocimientos</p>
+                            <span class="text-blue-600 font-medium">Comenzar →</span>
+                        </div>
+
+                        <!-- Tarjeta Material -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover cursor-pointer" onclick="showSection('material')">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                                <span class="text-green-600 text-xl">📚</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Material de Estudio</h3>
+                            <p class="text-gray-600 mb-4">Accede a recursos y materiales de aprendizaje</p>
+                            <span class="text-green-600 font-medium">Explorar →</span>
+                        </div>
+
+                        <!-- Tarjeta Progreso -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover cursor-pointer" onclick="showSection('progreso')">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                                <span class="text-purple-600 text-xl">📊</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Mi Progreso</h3>
+                            <p class="text-gray-600 mb-4">Revisa tu avance y estadísticas de aprendizaje</p>
+                            <span class="text-purple-600 font-medium">Ver más →</span>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas Rápidas -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Tu Progreso General</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-600">0</div>
+                                <div class="text-sm text-gray-600">Exámenes Completados</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">0%</div>
+                                <div class="text-sm text-gray-600">Promedio General</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600">0</div>
+                                <div class="text-sm text-gray-600">Días Consecutivos</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-orange-600">0</div>
+                                <div class="text-sm text-gray-600">Material Revisado</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección EXÁMENES -->
+                <div id="section-examenes" class="section-content hidden">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">📝 Exámenes y Evaluaciones</h2>
+                        <p class="text-gray-600 text-lg">Selecciona un examen para comenzar</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Examen 1 -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                                <span class="text-blue-600 text-xl">🔌</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Circuitos Básicos</h3>
+                            <p class="text-gray-600 mb-4">Fundamentos de circuitos eléctricos simples</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">10 preguntas</span>
+                                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                    Comenzar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Examen 2 -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                                <span class="text-green-600 text-xl">⚡</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Leyes de Kirchhoff</h3>
+                            <p class="text-gray-600 mb-4">Aplicación de leyes en circuitos complejos</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">15 preguntas</span>
+                                <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                    Comenzar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Examen 3 -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                                <span class="text-purple-600 text-xl">🔋</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Electrónica Digital</h3>
+                            <p class="text-gray-600 mb-4">Compuertas lógicas y sistemas digitales</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">12 preguntas</span>
+                                <button class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                                    Comenzar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección MATERIAL -->
+                <div id="section-material" class="section-content hidden">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">📚 Material de Estudio</h2>
+                        <p class="text-gray-600 text-lg">Recursos educativos para tu aprendizaje</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Material 1 -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Guía de Circuitos Básicos</h3>
+                            <p class="text-gray-600 mb-4">Aprende los fundamentos de los circuitos eléctricos con ejemplos prácticos.</p>
+                            <div class="flex space-x-2">
+                                <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm">PDF</span>
+                                <span class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">20 páginas</span>
+                            </div>
+                        </div>
+
+                        <!-- Material 2 -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Video Tutoriales</h3>
+                            <p class="text-gray-600 mb-4">Colección de videos explicativos sobre conceptos avanzados.</p>
+                            <div class="flex space-x-2">
+                                <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm">Videos</span>
+                                <span class="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm">5 horas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección PROGRESO -->
+                <div id="section-progreso" class="section-content hidden">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">📊 Mi Progreso</h2>
+                        <p class="text-gray-600 text-lg">Sigue tu avance en el aprendizaje</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Estadísticas de Aprendizaje</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                                <div class="text-2xl font-bold text-blue-600">0</div>
+                                <div class="text-sm text-blue-600">Exámenes Realizados</div>
+                            </div>
+                            <div class="text-center p-4 bg-green-50 rounded-lg">
+                                <div class="text-2xl font-bold text-green-600">0%</div>
+                                <div class="text-sm text-green-600">Tasa de Acierto</div>
+                            </div>
+                            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                                <div class="text-2xl font-bold text-purple-600">0h</div>
+                                <div class="text-sm text-purple-600">Tiempo Estudiado</div>
+                            </div>
+                            <div class="text-center p-4 bg-orange-50 rounded-lg">
+                                <div class="text-2xl font-bold text-orange-600">0</div>
+                                <div class="text-sm text-orange-600">Logros Desbloqueados</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección ACERCA DE -->
+                <div id="section-acerca" class="section-content hidden">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">ℹ️ Acerca de Electrolandia</h2>
+                        <p class="text-gray-600 text-lg">Conoce más sobre nuestra plataforma educativa</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Nuestra Misión</h3>
+                        <p class="text-gray-600 mb-4">
+                            Electrolandia es una plataforma educativa diseñada para facilitar el aprendizaje 
+                            de electricidad y electrónica mediante recursos interactivos y evaluaciones prácticas.
+                        </p>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Características Principales</h3>
+                        <ul class="text-gray-600 list-disc list-inside space-y-2 mb-4">
+                            <li>Exámenes interactivos con retroalimentación inmediata</li>
+                            <li>Material de estudio organizado por temas</li>
+                            <li>Seguimiento detallado del progreso de aprendizaje</li>
+                            <li>Interfaz intuitiva y fácil de usar</li>
+                        </ul>
+
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Contacto</h3>
+                        <p class="text-gray-600">
+                            Para más información, contáctanos en: 
+                            <span class="text-blue-600">soporte@electrolandia.com</span>
+                        </p>
+                    </div>
+                </div>
+
+            </main>
         </div>
+
     </div>
 
     <!-- Firebase y Lógica de la App -->
     <script type="module">
         // ==================================================
-        // CONFIGURACIÓN FIREBASE - ELECTROLANDIA (TU CONFIGURACIÓN EXACTA)
+        // CONFIGURACIÓN FIREBASE - ELECTROLANDIA
         // ==================================================
         const firebaseConfig = {
             apiKey: "AIzaSyDSy4dLsNpqrD3X3buB2NL3bPF_yS2CEdQ",
@@ -139,7 +419,7 @@
         };
 
         // ==================================================
-        // IMPORTACIONES FIREBASE - VERSIÓN 12.3.0 (TU VERSIÓN EXACTA)
+        // IMPORTACIONES FIREBASE - VERSIÓN 12.3.0
         // ==================================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
         import { 
@@ -186,8 +466,8 @@
                     }
                 });
 
-                // Mostrar aplicación
-                showApp();
+                // Mostrar aplicación de autenticación
+                showAuthApp();
 
             } catch (error) {
                 console.error('❌ Error al inicializar Firebase:', error);
@@ -196,18 +476,18 @@
         }
 
         // ==================================================
-        // INTERFAZ DE USUARIO
+        // INTERFAZ DE USUARIO - AUTENTICACIÓN
         // ==================================================
-        function showApp() {
+        function showAuthApp() {
             document.getElementById('loading-state').classList.add('hidden');
             document.getElementById('config-error').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
+            document.getElementById('auth-content').classList.remove('hidden');
             switchView('login');
         }
 
         function showConfigError(message) {
             document.getElementById('loading-state').classList.add('hidden');
-            document.getElementById('app-content').classList.add('hidden');
+            document.getElementById('auth-content').classList.add('hidden');
             document.getElementById('config-error').classList.remove('hidden');
             document.getElementById('error-message').textContent = message;
         }
@@ -282,18 +562,48 @@
 
         function handleUserLoggedIn(user) {
             console.log('👤 Usuario autenticado:', user.email);
-            document.getElementById('user-email').textContent = user.email;
-            document.getElementById('user-info').classList.remove('hidden');
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('register-view').classList.add('hidden');
-            showMessage(`¡Bienvenido ${user.email}!`, 'success');
+            
+            // Actualizar interfaz
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            document.getElementById('user-welcome').textContent = `Bienvenido, ${user.email}`;
+            
+            // Mostrar sección de inicio por defecto
+            showSection('inicio');
+            
+            // Guardar información del usuario en Firestore
+            saveUserData(user);
         }
 
         function handleUserLoggedOut() {
             console.log('🚪 Usuario desconectado');
-            document.getElementById('user-info').classList.add('hidden');
-            document.getElementById('login-view').classList.remove('hidden');
+            
+            // Volver a la pantalla de autenticación
+            document.getElementById('main-dashboard').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            
+            // Limpiar campos
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('register-email').value = '';
+            document.getElementById('register-password').value = '';
+            
             switchView('login');
+        }
+
+        async function saveUserData(user) {
+            try {
+                const userRef = doc(db, "users", user.uid);
+                await setDoc(userRef, {
+                    email: user.email,
+                    lastLogin: new Date().toISOString(),
+                    profileCompleted: false
+                }, { merge: true }); // merge: true para no sobreescribir datos existentes
+                
+                console.log('✅ Datos de usuario guardados en Firestore');
+            } catch (error) {
+                console.warn('⚠️ Error al guardar datos de usuario:', error);
+            }
         }
 
         window.handleLogin = async () => {
@@ -371,7 +681,6 @@
                     console.log('✅ Usuario guardado en Firestore');
                 } catch (dbError) {
                     console.warn('⚠️ Usuario creado pero error en Firestore:', dbError);
-                    // No mostramos error al usuario porque la cuenta SÍ se creó
                 }
 
                 showMessage('✅ Cuenta creada exitosamente. ¡Bienvenido a Electrolandia!', 'success');
@@ -413,6 +722,38 @@
             } catch (error) {
                 console.error('Error al cerrar sesión:', error);
                 showMessage('Error al cerrar sesión');
+            }
+        };
+
+        // ==================================================
+        // NAVEGACIÓN DEL DASHBOARD
+        // ==================================================
+        window.showSection = (sectionName) => {
+            // Ocultar todas las secciones
+            const sections = document.querySelectorAll('.section-content');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Remover clase activa de todos los botones de navegación
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(button => {
+                button.classList.remove('text-blue-600', 'border-blue-500');
+                button.classList.add('text-gray-600', 'border-transparent');
+            });
+            
+            // Mostrar la sección seleccionada
+            const activeSection = document.getElementById(`section-${sectionName}`);
+            if (activeSection) {
+                activeSection.classList.remove('hidden');
+                activeSection.classList.add('fade-in');
+            }
+            
+            // Activar el botón de navegación correspondiente
+            const activeNavButton = document.getElementById(`nav-${sectionName}`);
+            if (activeNavButton) {
+                activeNavButton.classList.remove('text-gray-600', 'border-transparent');
+                activeNavButton.classList.add('text-blue-600', 'border-blue-500');
             }
         };
 
