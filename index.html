@@ -4,20 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Autenticación Monocromática Standalone</title>
-    <!-- Carga de Tailwind CSS -->
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        // Definición de la paleta de grises
-                        'neutral-dark': '#1F2937', // gray-800
-                        'neutral-medium': '#4B5563', // gray-600
-                        'neutral-light': '#D1D5DB', // gray-300
-                        'neutral-bg': '#F3F4F6', // gray-100
-                        'error-bg': '#FEF2F2', // red-50
-                        'error-text': '#B91C1C', // red-700
+                        'neutral-dark': '#1F2937',
+                        'neutral-medium': '#4B5563',
+                        'neutral-light': '#D1D5DB',
+                        'neutral-bg': '#F3F4F6',
+                        'error-bg': '#FEF2F2',
+                        'error-text': '#B91C1C',
+                        'success-bg': '#F0FDF4',
+                        'success-text': '#166534',
                     }
                 }
             }
@@ -27,204 +29,214 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F9FAFB; /* Fondo muy claro */
+            background-color: #F9FAFB;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
         }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- Contenedor Principal de la App -->
-    <div id="app-container" class="w-full max-w-md bg-white rounded-xl shadow-2xl p-6 md:p-8 transform scale-95 opacity-0">
+    <!-- Contenedor Principal -->
+    <div id="app-container" class="w-full max-w-md bg-white rounded-xl shadow-2xl p-6 md:p-8 transform scale-95 opacity-0 transition-all duration-300">
         <h1 class="text-3xl font-bold text-center text-neutral-dark mb-6">Acceso Monocromático</h1>
 
-        <!-- Pestañas de Login/Registro -->
+        <!-- Indicador de Carga -->
+        <div id="loading-indicator" class="hidden mb-4 text-center">
+            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-neutral-dark"></div>
+            <span class="ml-2 text-neutral-medium">Procesando...</span>
+        </div>
+
+        <!-- Pestañas -->
         <div class="flex bg-neutral-bg rounded-lg p-1 mb-6">
-            <button id="login-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300" onclick="switchView('login')">
+            <button id="login-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300 bg-neutral-dark text-white shadow-lg shadow-neutral-medium/50">
                 Iniciar Sesión
             </button>
-            <button id="register-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300" onclick="switchView('register')">
+            <button id="register-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300 text-neutral-medium hover:bg-neutral-light" onclick="switchView('register')">
                 Registrarse
             </button>
         </div>
 
-        <!-- Vista de Inicio de Sesión -->
+        <!-- Vista de Login -->
         <div id="login-view" class="space-y-4">
             <input type="email" id="login-email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
             <input type="password" id="login-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <button onclick="handleLogin()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40">
+            <button onclick="handleLogin()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40 disabled:opacity-50 disabled:cursor-not-allowed">
                 Entrar
             </button>
         </div>
 
-        <!-- Vista de Registro (Oculta por defecto) -->
+        <!-- Vista de Registro -->
         <div id="register-view" class="space-y-4 hidden">
             <input type="email" id="register-email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <input type="password" id="register-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:-ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <button onclick="handleRegister()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40">
+            <input type="password" id="register-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
+            <button onclick="handleRegister()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40 disabled:opacity-50 disabled:cursor-not-allowed">
                 Crear Cuenta
             </button>
         </div>
 
         <!-- Mensaje de Estado -->
-        <div id="message-box" class="mt-6 p-3 bg-error-bg text-error-text rounded-lg hidden" role="alert"></div>
-
+        <div id="message-box" class="mt-6 p-3 rounded-lg hidden" role="alert"></div>
     </div>
 
-    <!-- Script de Firebase y Lógica de la Aplicación -->
+    <!-- Script Corregido -->
     <script type="module">
-        // Importaciones de Firebase (CDN)
-        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Importaciones de Firebase - VERSIÓN CORREGIDA
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
-        // =========================================================================
-        // Configuración de Firebase - RESTAURADO el objeto firebaseConfig
-        // =========================================================================
+        // Configuración de Firebase (¡CONSIDERAR MOVER A VARIABLES DE ENTORNO!)
         const firebaseConfig = {
-          apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
-          authDomain: "fir-electrolandiaiii.firebaseapp.com",
-          projectId: "fir-electrolandiaiii",
-          storageBucket: "fir-electrolandiaiii.firebasestorage.app",
-          messagingSenderId: "378459653043",
-          appId: "1:378459653043:web:2a76b998c3c5bb459d81c6"
+            apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
+            authDomain: "fir-electrolandiaiii.firebaseapp.com",
+            projectId: "fir-electrolandiaiii",
+            storageBucket: "fir-electrolandiaiii.firebasestorage.app",
+            messagingSenderId: "378459653043",
+            appId: "1:378459653043:web:2a76b998c3c5bb459d81c6"
         };
-        // =========================================================================
 
-        // Variables Globales y Inicialización
-        let app;
-        let db;
-        let auth;
-        let userId = null;
+        // Variables Globales
+        let app, db, auth, userId = null;
 
-        // Referencias a elementos del DOM
-        const loginView = document.getElementById('login-view');
-        const registerView = document.getElementById('register-view');
-        const loginTab = document.getElementById('login-tab');
-        const registerTab = document.getElementById('register-tab');
-        const messageBox = document.getElementById('message-box');
-        const appContainer = document.getElementById('app-container');
+        // Referencias DOM
+        const elements = {
+            loginView: document.getElementById('login-view'),
+            registerView: document.getElementById('register-view'),
+            loginTab: document.getElementById('login-tab'),
+            registerTab: document.getElementById('register-tab'),
+            messageBox: document.getElementById('message-box'),
+            appContainer: document.getElementById('app-container'),
+            loadingIndicator: document.getElementById('loading-indicator')
+        };
 
-        // Clases de estilo para las pestañas (Gris oscuro para activo, gris claro para inactivo)
+        // Clases para estado
         const ACTIVE_CLASSES = 'bg-neutral-dark text-white shadow-lg shadow-neutral-medium/50';
         const INACTIVE_CLASSES = 'text-neutral-medium hover:bg-neutral-light';
 
-        // Función para mostrar mensajes de estado/error
-        function showMessage(message, isError = true) {
-            messageBox.textContent = message;
-            messageBox.classList.remove('hidden', 'bg-error-bg', 'bg-neutral-bg', 'text-error-text', 'text-neutral-dark');
-            
-            if (isError) {
-                messageBox.classList.add('bg-error-bg', 'text-error-text');
-            } else {
-                messageBox.classList.add('bg-neutral-bg', 'text-neutral-dark');
-            }
-        }
-
+        // Utilidades
         function toggleClasses(element, classesString, add) {
             if (!element || !classesString) return;
             const classes = classesString.split(' ').filter(c => c.length > 0);
-            
-            if (add) {
-                element.classList.add(...classes);
+            element.classList[add ? 'add' : 'remove'](...classes);
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                elements.loadingIndicator.classList.remove('hidden');
+                elements.appContainer.classList.add('loading');
             } else {
-                element.classList.remove(...classes);
+                elements.loadingIndicator.classList.add('hidden');
+                elements.appContainer.classList.remove('loading');
             }
         }
 
-        window.switchView = (view) => {
-            if (view === 'login') {
-                loginView.classList.remove('hidden');
-                registerView.classList.add('hidden');
-                
-                toggleClasses(loginTab, ACTIVE_CLASSES, true);
-                toggleClasses(loginTab, INACTIVE_CLASSES, false);
-
-                toggleClasses(registerTab, INACTIVE_CLASSES, true);
-                toggleClasses(registerTab, ACTIVE_CLASSES, false);
-
-            } else if (view === 'register') {
-                registerView.classList.remove('hidden');
-                loginView.classList.add('hidden');
-
-                toggleClasses(registerTab, ACTIVE_CLASSES, true);
-                toggleClasses(registerTab, INACTIVE_CLASSES, false);
-
-                toggleClasses(loginTab, INACTIVE_CLASSES, true);
-                toggleClasses(loginTab, ACTIVE_CLASSES, false);
+        function showMessage(message, type = 'error') {
+            elements.messageBox.textContent = message;
+            elements.messageBox.classList.remove('hidden', 'bg-error-bg', 'text-error-text', 'bg-success-bg', 'text-success-text');
+            
+            if (type === 'success') {
+                elements.messageBox.classList.add('bg-success-bg', 'text-success-text');
+            } else {
+                elements.messageBox.classList.add('bg-error-bg', 'text-error-text');
             }
-            messageBox.classList.add('hidden'); 
+        }
+
+        // Navegación entre vistas
+        window.switchView = (view) => {
+            const isLogin = view === 'login';
+            
+            // Mostrar/ocultar vistas
+            elements.loginView.classList.toggle('hidden', !isLogin);
+            elements.registerView.classList.toggle('hidden', isLogin);
+            
+            // Actualizar pestañas
+            toggleClasses(elements.loginTab, ACTIVE_CLASSES, isLogin);
+            toggleClasses(elements.loginTab, INACTIVE_CLASSES, !isLogin);
+            toggleClasses(elements.registerTab, ACTIVE_CLASSES, !isLogin);
+            toggleClasses(elements.registerTab, INACTIVE_CLASSES, isLogin);
+            
+            // Ocultar mensajes
+            elements.messageBox.classList.add('hidden');
         };
 
-        // Función de inicialización de Firebase
+        // Inicialización de Firebase
         function initializeFirebase() {
             try {
-                // Aseguramos que la aplicación solo se inicialice una vez.
                 if (getApps().length === 0) {
                     app = initializeApp(firebaseConfig);
                 } else {
-                    app = getApps()[0]; // Reusa la app existente si ya está inicializada
+                    app = getApps()[0];
                 }
                 
                 auth = getAuth(app);
                 db = getFirestore(app);
                 
-                // Observador de estado de autenticación 
+                // Observador de autenticación
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
                         console.log('Usuario autenticado:', userId);
-                        messageBox.classList.add('hidden'); 
+                        showMessage('Sesión iniciada correctamente', 'success');
+                        // Aquí puedes redirigir o actualizar la UI
                     } else {
                         userId = null;
                         console.log('Usuario deslogueado.');
                     }
                 });
 
-                // Revelar la UI inmediatamente después de que Firebase se inicializa con éxito.
-                appContainer.classList.remove('scale-95', 'opacity-0');
-                
+                // Mostrar UI
+                elements.appContainer.classList.remove('scale-95', 'opacity-0');
                 switchView('login');
 
             } catch (error) {
                 console.error("Error al inicializar Firebase:", error);
-                // Si la configuración es incorrecta, mostramos un error claro en el cuadro de mensaje.
-                showMessage(`Error de inicialización: ${error.message}`, true);
+                showMessage(`Error de inicialización: ${error.message}`);
             }
         }
 
-        // --- Manejadores de autenticación ---
+        // Manejadores de autenticación
         window.handleLogin = async () => {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
+            if (!email || !password) {
+                showMessage('Por favor, completa todos los campos');
+                return;
+            }
+
+            setLoading(true);
+            
             try {
-                if (!auth) throw new Error("Firebase Auth no está inicializado. Verifica tu configuración.");
+                if (!auth) throw new Error("Firebase Auth no está inicializado");
                 
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log('Inicio de sesión exitoso:', userCredential.user.uid);
-                showMessage('Inicio de sesión exitoso.', false);
+                await signInWithEmailAndPassword(auth, email, password);
+                showMessage('Inicio de sesión exitoso', 'success');
                 
             } catch (error) {
-                console.error("Error en el inicio de sesión:", error);
+                console.error("Error en login:", error);
+                let errorMessage = "Error al iniciar sesión";
                 
-                let errorMessage = "Error desconocido al iniciar sesión.";
-
-                if (error.code) {
-                    switch (error.code) {
-                        case 'auth/user-not-found':
-                        case 'auth/wrong-password':
-                            errorMessage = "Credenciales incorrectas. Verifica tu correo y contraseña.";
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage = "El formato del correo electrónico es inválido.";
-                            break;
-                        default:
-                            errorMessage = `Error de Firebase: ${error.message}`;
-                            break;
-                    }
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage = "Credenciales incorrectas";
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = "Formato de email inválido";
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = "Demasiados intentos. Intenta más tarde";
+                        break;
+                    default:
+                        errorMessage = `Error: ${error.message}`;
                 }
                 
-                showMessage(errorMessage, true);
+                showMessage(errorMessage);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -232,12 +244,24 @@
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
             
+            if (!email || !password) {
+                showMessage('Por favor, completa todos los campos');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            setLoading(true);
+            
             try {
-                if (!auth) throw new Error("Firebase Auth no está inicializado. Verifica tu configuración.");
+                if (!auth) throw new Error("Firebase Auth no está inicializado");
                 
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 
-                // Guardar datos básicos del usuario en una colección 'profiles'
+                // Guardar perfil del usuario
                 const userRef = doc(db, "profiles", userCredential.user.uid);
                 await setDoc(userRef, {
                     email: userCredential.user.email,
@@ -245,43 +269,38 @@
                     userId: userCredential.user.uid
                 });
 
-                console.log('Registro exitoso:', userCredential.user.uid);
-                showMessage('Registro exitoso. Ya puedes iniciar sesión.', false);
+                showMessage('Cuenta creada exitosamente', 'success');
+                switchView('login');
                 
             } catch (error) {
-                console.error("Error en el registro:", error);
+                console.error("Error en registro:", error);
+                let errorMessage = "Error al crear cuenta";
                 
-                let errorMessage = "Error desconocido al registrar.";
-
-                if (error.code) {
-                    switch (error.code) {
-                        case 'auth/operation-not-allowed':
-                            errorMessage = "¡Error de Configuración! La autenticación por Email/Contraseña NO está habilitada en tu consola de Firebase.";
-                            break;
-                        case 'auth/email-already-in-use':
-                            errorMessage = "El correo electrónico ya está registrado.";
-                            break;
-                        case 'auth/weak-password':
-                            errorMessage = "La contraseña es muy débil (mínimo 6 caracteres).";
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage = "El formato del correo electrónico es inválido.";
-                            break;
-                        default:
-                            errorMessage = `Error de Firebase: ${error.message}`;
-                            break;
-                    }
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = "El email ya está registrado";
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = "La contraseña es muy débil";
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = "Formato de email inválido";
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage = "Operación no permitida. Contacta al administrador";
+                        break;
+                    default:
+                        errorMessage = `Error: ${error.message}`;
                 }
                 
-                showMessage(errorMessage, true);
+                showMessage(errorMessage);
+            } finally {
+                setLoading(false);
             }
         };
-        // --- Fin de los manejadores de autenticación ---
 
-
-        // Iniciar la aplicación
+        // Inicializar la aplicación
         initializeFirebase();
-
     </script>
 </body>
 </html>
