@@ -3,288 +3,1544 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autenticación Monocromática Standalone</title>
-    <!-- Carga de Tailwind CSS -->
+    <title>ElectroLandia III - Registro y Administración</title>
+    <!-- Carga de Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        // Definición de la paleta de grises
-                        'neutral-dark': '#1F2937', // gray-800
-                        'neutral-medium': '#4B5563', // gray-600
-                        'neutral-light': '#D1D5DB', // gray-300
-                        'neutral-bg': '#F3F4F6', // gray-100
-                        'error-bg': '#FEF2F2', // red-50
-                        'error-text': '#B91C1C', // red-700
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F9FAFB; /* Fondo muy claro */
-        }
-    </style>
-</head>
-<body class="min-h-screen flex items-center justify-center p-4">
-
-    <!-- Contenedor Principal de la App -->
-    <div id="app-container" class="w-full max-w-md bg-white rounded-xl shadow-2xl p-6 md:p-8 transform transition duration-500 scale-95 opacity-0">
-        <h1 class="text-3xl font-bold text-center text-neutral-dark mb-6">Acceso Monocromático</h1>
-
-        <!-- Pestañas de Login/Registro -->
-        <div class="flex bg-neutral-bg rounded-lg p-1 mb-6">
-            <button id="login-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300" onclick="switchView('login')">
-                Iniciar Sesión
-            </button>
-            <button id="register-tab" class="flex-1 py-2 text-center text-sm font-semibold rounded-lg transition duration-300" onclick="switchView('register')">
-                Registrarse
-            </button>
-        </div>
-
-        <!-- Vista de Inicio de Sesión -->
-        <div id="login-view" class="space-y-4">
-            <input type="email" id="login-email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <input type="password" id="login-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <button onclick="handleLogin()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40">
-                Entrar
-            </button>
-        </div>
-
-        <!-- Vista de Registro (Oculta por defecto) -->
-        <div id="register-view" class="space-y-4 hidden">
-            <input type="email" id="register-email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <input type="password" id="register-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:-ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <button onclick="handleRegister()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40">
-                Crear Cuenta
-            </button>
-        </div>
-
-        <!-- Mensaje de Estado -->
-        <div id="message-box" class="mt-6 p-3 bg-error-bg text-error-text rounded-lg hidden" role="alert"></div>
-
-    </div>
-
-    <!-- Script de Firebase y Lógica de la Aplicación -->
+    <!-- Carga de la biblioteca de Telegram Web App (Mini App) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Carga de Firebase y Firestore -->
     <script type="module">
-        // Importaciones de Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // =========================================================================
-        // ¡INSERTA AQUÍ TU OBJETO firebaseConfig COMPLETO!
-        // Ejemplo:
-        // const firebaseConfig = {
-        //     apiKey: "AIzaSyC...",
-        //     authDomain: "mi-app-monocromatica.firebaseapp.com",
-        //     projectId: "mi-app-monocromatica",
-        //     // ... y el resto de los campos
-        // };
-        // =========================================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
-            authDomain: "fir-electrolandiaiii.firebaseapp.com",
-            projectId: "fir-electrolandiaiii",
-            storageBucket: "fir-electrolandiaiii.firebasestorage.app",
-            messagingSenderId: "378459653043",
-            appId: "1:378459653043:web:2a76b998c3c5bb459d81c6"
-        };
-        // =========================================================================
+        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query, setDoc, doc, getDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Variables Globales y Inicialización
+        // Establecer nivel de log para depuración de Firestore
+        setLogLevel('Debug');
+        
         let app;
         let db;
         let auth;
-        let userId = null;
-
-        // Referencias a elementos del DOM
-        const loginView = document.getElementById('login-view');
-        const registerView = document.getElementById('register-view');
-        const loginTab = document.getElementById('login-tab');
-        const registerTab = document.getElementById('register-tab');
-        const messageBox = document.getElementById('message-box');
-        const appContainer = document.getElementById('app-container');
-
-        // Clases de estilo para las pestañas (Gris oscuro para activo, gris claro para inactivo)
-        const ACTIVE_CLASSES = 'bg-neutral-dark text-white shadow-lg shadow-neutral-medium/50';
-        const INACTIVE_CLASSES = 'text-neutral-medium hover:bg-neutral-light';
-
-        // Función para mostrar mensajes de estado/error
-        function showMessage(message, isError = true) {
-            messageBox.textContent = message;
-            messageBox.classList.remove('hidden', 'bg-error-bg', 'bg-neutral-bg', 'text-error-text', 'text-neutral-dark');
-            
-            if (isError) {
-                messageBox.classList.add('bg-error-bg', 'text-error-text');
-            } else {
-                messageBox.classList.add('bg-neutral-bg', 'text-neutral-dark');
-            }
-        }
-
-        function toggleClasses(element, classesString, add) {
-            if (!element || !classesString) return;
-            const classes = classesString.split(' ').filter(c => c.length > 0);
-            
-            if (add) {
-                element.classList.add(...classes);
-            } else {
-                element.classList.remove(...classes);
-            }
-        }
-
-        window.switchView = (view) => {
-            if (view === 'login') {
-                loginView.classList.remove('hidden');
-                registerView.classList.add('hidden');
-                
-                toggleClasses(loginTab, ACTIVE_CLASSES, true);
-                toggleClasses(loginTab, INACTIVE_CLASSES, false);
-
-                toggleClasses(registerTab, INACTIVE_CLASSES, true);
-                toggleClasses(registerTab, ACTIVE_CLASSES, false);
-
-            } else if (view === 'register') {
-                registerView.classList.remove('hidden');
-                loginView.classList.add('hidden');
-
-                toggleClasses(registerTab, ACTIVE_CLASSES, true);
-                toggleClasses(registerTab, INACTIVE_CLASSES, false);
-
-                toggleClasses(loginTab, INACTIVE_CLASSES, true);
-                toggleClasses(loginTab, ACTIVE_CLASSES, false);
-            }
-            messageBox.classList.add('hidden'); 
+        let authUserId = null; // ID de Firebase Auth (temporal o tokenizado)
+        let currentUserCi = null; // CI del estudiante (ID de la aplicación/Firestore)
+        let studentData = {};
+        let allStudents = []; // Para el Scoreboard y Admin Reporte
+        let currentExam = null; 
+        let isAdmin = false;
+        
+        // CI del administrador (Se usará como clave para el rol de administrador)
+        const ADMIN_CI = '12345678'; 
+        
+        // Estado global del Mini Juego
+        let currentGameState = {
+            gameId: null,
+            score: 0,
+            questionCount: 0,
+            targetQuestions: 10,
+            reward: 0
         };
+        
+        // --- Configuración e Inicialización de Gemini ---
+        const GEMINI_MODEL = 'gemini-2.5-flash-preview-05-20';
+        const GEMINI_URL_BASE = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=`;
+        const apiKey = ""; // Canvas proporciona esto en runtime
+        // --- Fin Configuración de Gemini ---
 
-        // Función de inicialización de Firebase
-        function initializeFirebase() {
-            try {
-                // Ya no hay validación, las credenciales están insertadas.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                // Inicialización de Firestore
-                db = getFirestore(app);
-                
-                // Observador de estado de autenticación (no requiere token inicial)
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log('Usuario autenticado:', userId);
-                        // Ocultar mensaje de error si había uno previo
-                        messageBox.classList.add('hidden'); 
+        /**
+         * Muestra un spinner de carga y deshabilita un botón.
+         */
+        function showLoading(elementId) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.disabled = true;
+                el.innerHTML = '<svg class="animate-spin h-5 w-5 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Cargando...';
+            }
+        }
+
+        /**
+         * Oculta el spinner de carga y restaura el texto del botón.
+         */
+        function hideLoading(elementId, originalText) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.disabled = false;
+                el.innerHTML = originalText;
+            }
+        }
+        
+        /**
+         * Utilidad para llamar a la API de Gemini con reintentos y backoff.
+         */
+        async function callGeminiAPI(payload, useSearch, retries = 3) {
+            const apiUrl = `${GEMINI_URL_BASE}${apiKey}`;
+            
+            // Añadir herramientas si se solicita búsqueda (grounding)
+            if (useSearch) {
+                payload.tools = [{ "google_search": {} }];
+            }
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && i < retries - 1) {
+                            // Demasiadas peticiones, aplicar backoff exponencial
+                            const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue; // Reintentar
+                        }
+                        throw new Error(`Error HTTP! estado: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                         return candidate; // Devuelve el objeto candidato completo
                     } else {
-                        userId = null;
-                        console.log('Usuario deslogueado.');
+                         throw new Error("Respuesta del modelo incompleta o vacía.");
                     }
-                    appContainer.classList.remove('scale-95', 'opacity-0');
-                });
 
-                switchView('login');
+                } catch (error) {
+                    console.error(`Intento ${i + 1} fallido:`, error);
+                    if (i === retries - 1) throw error; // El último reintento falló
+                }
+            }
+        }
+        // --- Fin Utilidades de Gemini ---
+
+        /**
+         * Cambia la vista activa de la Mini App.
+         */
+        function switchView(viewName, data = null) {
+            // Se añade 'about' a la lista de vistas
+            const views = ['login', 'dashboard', 'classes-list', 'class-detail', 'exams-list', 'exam-view', 'games-list', 'game-view', 'admin-view', 'about-view'];
+            
+            views.forEach(view => {
+                const el = document.getElementById(`${view}-view`);
+                if (el) {
+                    el.classList.add('hidden');
+                }
+            });
+
+            const targetEl = document.getElementById(`${viewName}-view`);
+            if (targetEl) {
+                targetEl.classList.remove('hidden');
+            }
+
+            // Lógica específica al cambiar de vista
+            if (viewName === 'class-detail' && data) renderClassDetail(data);
+            if (viewName === 'classes-list') fetchClasses();
+            if (viewName === 'exams-list') fetchExams();
+            if (viewName === 'games-list') fetchGames();
+            if (viewName === 'admin-view') fetchStudentReports(); 
+            
+            // Manejo del BackButton de Telegram
+             if (window.Telegram.WebApp) {
+                if (viewName !== 'dashboard' && viewName !== 'login') {
+                    window.Telegram.WebApp.BackButton.show();
+                    window.Telegram.WebApp.onEvent('backButtonClicked', () => switchView('dashboard'));
+                } else {
+                    window.Telegram.WebApp.BackButton.hide();
+                    window.Telegram.WebApp.offEvent('backButtonClicked', () => switchView('dashboard'));
+                }
+            }
+        }
+        
+        /**
+         * Inicializa Firebase y espera la CI para autenticar la aplicación.
+         */
+        async function initializeAndAuthenticate() {
+            try {
+                if (!firebaseConfig) throw new Error("La configuración de Firebase no está disponible.");
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // 1. Autenticación base (anonima o por token)
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                authUserId = auth.currentUser?.uid || 'anon-' + crypto.randomUUID().slice(0, 8);
+                
+                // 2. Crear datos mock y luego mostrar el login
+                await createMockAdminRecord(); 
+                await createMockClassData();
+                await createMockExamData();
+                await createMockGameData();
+
+                switchView('login'); // Muestra la pantalla de inicio de sesión/registro
+                
+            } catch (error) {
+                console.error("Error al inicializar o autenticar Firebase:", error);
+                document.getElementById('status-message').textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        /**
+         * Maneja el proceso de inicio de sesión o registro basado en la CI.
+         */
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const ciInput = document.getElementById('login-ci');
+            const nameInput = document.getElementById('login-name');
+            // Quitamos espacios y validamos solo números en la CI para ser estricto
+            const ci = ciInput.value.trim().replace(/\s/g, ''); 
+            const name = nameInput.value.trim();
+
+            if (!ci || !name || !/^[0-9]+$/.test(ci)) {
+                document.getElementById('login-message').textContent = "Por favor, ingrese una Cédula válida (solo números) y su nombre completo.";
+                return;
+            }
+            
+            currentUserCi = ci; // Establece la CI como ID del estudiante
+            document.getElementById('login-message').textContent = "Verificando credenciales...";
+
+            try {
+                const studentRef = doc(db, "artifacts", appId, "public/data", "student_records", currentUserCi);
+                const studentSnap = await getDoc(studentRef);
+
+                if (!studentSnap.exists()) {
+                    // *** REGISTRO DE NUEVO ESTUDIANTE ***
+                    await registerStudent(ci, name);
+                    document.getElementById('login-message').textContent = `Registro exitoso para ${name}.`;
+                } else {
+                    // *** INICIO DE SESIÓN EXISTENTE ***
+                    // Si el estudiante no está activo, detenemos el proceso
+                    if (!studentSnap.data().isActive) {
+                         document.getElementById('login-message').textContent = `Tu cuenta ha sido desactivada por un administrador.`;
+                         return;
+                    }
+
+                    document.getElementById('login-message').textContent = `Bienvenido de vuelta, ${studentSnap.data().name}.`;
+                    // Actualiza el nombre si el usuario lo cambió al iniciar sesión
+                    if (studentSnap.data().name !== name) {
+                         await updateDoc(studentRef, { name: name });
+                    }
+                }
+                
+                await finalizeAuthentication();
 
             } catch (error) {
-                console.error("Error al inicializar Firebase:", error);
-                showMessage(`Error de inicialización: ${error.message}`, true);
+                console.error("Error en el login/registro:", error);
+                // Mostrar un mensaje más detallado en caso de error de Firestore
+                document.getElementById('login-message').textContent = `Error de conexión: ${error.message}. Verifique su conexión.`;
+            }
+        }
+        
+        /**
+         * Crea el registro inicial del estudiante en Firestore (Punto 5).
+         */
+        async function registerStudent(ci, name) {
+            const studentRef = doc(db, "artifacts", appId, "public/data", "student_records", ci);
+            
+            const initialData = {
+                userId: ci, // La CI es el ID principal
+                name: name,
+                totalPoints: 0,
+                isAdmin: (ci === ADMIN_CI), // Asigna rol de administrador
+                isActive: true, // Nuevo: Campo para dar de baja
+                badges: [],
+                completedClasses: {},
+                examResults: {},
+                gameResults: {}, 
+                lastActive: new Date().toISOString()
+            };
+            
+            await setDoc(studentRef, initialData);
+        }
+
+        /**
+         * Finaliza la autenticación, verifica el rol y cambia a Dashboard.
+         * ESTE ES EL PUNTO CLAVE DE CORRECCIÓN: Hace visible el contenedor principal.
+         */
+        async function finalizeAuthentication() {
+             if (!currentUserCi) return;
+             
+             // 1. Mostrar el contenedor principal de la aplicación (SOLUCIÓN AL ERROR DE AVANCE)
+             document.getElementById('main-content-wrapper').classList.remove('hidden');
+             document.getElementById('login-view').classList.add('hidden'); // Ocultar la vista de login
+
+             // 2. Verificar el rol de administrador
+             isAdmin = (currentUserCi === ADMIN_CI);
+             
+             // 3. Actualizar UI con ID de la app (CI)
+             document.getElementById('current-user-id').textContent = currentUserCi;
+             
+             // 4. Mostrar/Ocultar la pestaña de administración
+             const adminTab = document.getElementById('admin-tab');
+             if (isAdmin) {
+                 adminTab.classList.remove('hidden');
+             } else {
+                 adminTab.classList.add('hidden');
+             }
+
+             // 5. Establecer escuchadores en tiempo real
+             setupRealtimeStudentData();
+             setupRealtimeScoreboard();
+
+             switchView('dashboard'); // Muestra el dashboard
+        }
+
+
+        /**
+         * Crea un registro de administrador de prueba (Punto 3).
+         */
+        async function createMockAdminRecord() {
+             const adminRef = doc(db, "artifacts", appId, "public/data", "student_records", ADMIN_CI);
+             if (!(await getDoc(adminRef)).exists()) {
+                 await setDoc(adminRef, {
+                    userId: ADMIN_CI,
+                    name: "Administrador (CI: " + ADMIN_CI + ")",
+                    totalPoints: 10000, 
+                    isAdmin: true,
+                    isActive: true,
+                    badges: ['👑'],
+                    completedClasses: {},
+                    examResults: {}, 
+                    gameResults: {}, 
+                    lastActive: new Date().toISOString()
+                 });
+             }
+        }
+        
+        // --- MOCK DATA (Clases, Exámenes, Juegos) ---
+        async function createMockClassData() { 
+             const classId = 'class_101';
+             const classRef = doc(db, "artifacts", appId, "public/data", "classes", classId);
+             if (!(await getDoc(classRef)).exists()) {
+                 await setDoc(classRef, {
+                    id: classId,
+                    title: "Introducción a los Circuitos DC",
+                    description: "Conceptos fundamentales de voltaje, corriente, resistencia y la Ley de Ohm.",
+                    pointsAwarded: 25,
+                    contentUrl: "https://www.youtube.com/embed/fD3q1s7K5uA?si=fL9_2bA1w_G1", 
+                    duration: "15 min"
+                 });
+             }
+        }
+        async function createMockExamData() { 
+             const examId = 'exam_001_ohms';
+             const examRef = doc(db, "artifacts", appId, "public/data", "exams", examId);
+             if (!(await getDoc(examRef)).exists()) {
+                 await setDoc(examRef, {
+                    id: examId,
+                    title: "Examen 1: Ley de Ohm y Conceptos Básicos",
+                    description: "Evalúa tu comprensión sobre $V=I \\cdot R$, potencia y componentes pasivos.",
+                    passingScore: 70, // 70%
+                    maxPoints: 100,
+                    rewardPoints: 50, // Puntos extra por completar
+                    questions: [
+                        { qId: 1, text: "¿Cuál es la unidad estándar de la Resistencia Eléctrica?", options: ["Voltio", "Amperio", "Ohm", "Faradio"], correctAnswer: "Ohm" },
+                        { qId: 2, text: "Según la Ley de Ohm, si el Voltaje es 12V y la Resistencia es 4$ \\Omega $, ¿cuál es la Corriente (I)?", options: ["48 A", "3 A", "0.33 A", "16 A"], correctAnswer: "3 A" },
+                        { qId: 3, text: "La Potencia Eléctrica (P) se calcula con la fórmula:", options: ["$P=I/R$", "$P=V^2/I$", "$P=V \\cdot I$", "$P=V \\cdot R$"], correctAnswer: "$P=V \\cdot I$" }
+                    ]
+                 });
+             }
+        }
+        async function createMockGameData() { 
+             const gameId = 'game_math_challenge';
+             const gameRef = doc(db, "artifacts", appId, "public/data", "games", gameId);
+             if (!(await getDoc(gameRef)).exists()) {
+                 await setDoc(gameRef, {
+                    id: gameId,
+                    title: "Desafío Matemático Rápido (Ley de Ohm)",
+                    description: "Resuelve 10 problemas rápidos para ganar puntos. ¡Necesitas 10/10!",
+                    maxRewardPoints: 30,
+                    type: "math",
+                    minQuestions: 10
+                 });
+             }
+        }
+
+
+        // --- Funciones de Datos en Tiempo Real ---
+        
+        /**
+         * Escucha los cambios en tiempo real en los datos del estudiante actual.
+         */
+        function setupRealtimeStudentData() {
+            if (!currentUserCi) return;
+            const studentRef = doc(db, "artifacts", appId, "public/data", "student_records", currentUserCi);
+            onSnapshot(studentRef, (doc) => {
+                if (doc.exists()) {
+                    studentData = doc.data();
+                    
+                    if (!studentData.isActive) {
+                         document.getElementById('status-message').textContent = `Tu cuenta ha sido desactivada por un administrador. No puedes acceder.`;
+                         document.getElementById('status-message').classList.remove('text-green-600');
+                         document.getElementById('status-message').classList.add('text-red-500', 'font-bold');
+                         // Si se desactiva en tiempo real, forzamos el cierre de sesión
+                         if (document.getElementById('main-content-wrapper').classList.contains('hidden') === false) {
+                            window.location.reload(); // Recargar para volver al login
+                         }
+                         return;
+                    }
+
+                    document.getElementById('dashboard-points').textContent = studentData.totalPoints || 0;
+                    // Cálculo de métricas para el Dashboard
+                    const totalExamsPassed = Object.values(studentData.examResults || {}).filter(res => res.passed).length;
+                    document.getElementById('dashboard-exams-passed').textContent = `${totalExamsPassed} / 1`; 
+                    const totalGamesWon = Object.keys(studentData.gameResults || {}).length;
+                    document.getElementById('dashboard-games-won').textContent = `${totalGamesWon} veces`;
+                }
+            }, (error) => {
+                console.error("Error al escuchar datos del estudiante:", error);
+            });
+        }
+
+        /**
+         * Escucha los cambios en tiempo real en la tabla de puntuaciones (Scoreboard) y carga todos los estudiantes.
+         */
+        function setupRealtimeScoreboard() {
+            const scoreboardRef = collection(db, "artifacts", appId, "public/data", "student_records");
+            const scoreboardElement = document.getElementById('scoreboard-list');
+
+            // Filtrar solo estudiantes activos
+            const q = query(scoreboardRef, where("isActive", "==", true));
+            
+            onSnapshot(q, (snapshot) => {
+                allStudents = []; // Almacena todos los estudiantes activos
+                snapshot.forEach((doc) => {
+                    allStudents.push(doc.data());
+                });
+                
+                // 1. Renderizar Scoreboard (Top 10)
+                const sortedStudents = [...allStudents].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+                scoreboardElement.innerHTML = ''; 
+                
+                sortedStudents.slice(0, 10).forEach((student, index) => { 
+                    const isCurrentUser = student.userId === currentUserCi;
+                    const bgColor = isCurrentUser ? 'bg-indigo-100 border-indigo-500 border-2' : 
+                                    (index < 3 ? 'bg-yellow-100 border-yellow-500 border-2' : 'bg-white');
+
+                    const listItem = document.createElement('li');
+                    listItem.className = `flex justify-between items-center p-3 mb-2 rounded-xl shadow-md ${bgColor}`;
+                    
+                    listItem.innerHTML = `
+                        <span class="font-bold text-lg w-8 text-center">${index + 1}.</span>
+                        <div class="flex-grow ml-4">
+                            <span class="font-semibold text-gray-800">${student.name} ${isCurrentUser ? '(Tú)' : ''}</span>
+                            <span class="block text-xs text-gray-500 truncate">CI: ${student.userId}</span>
+                        </div>
+                        <span class="text-xl font-extrabold text-indigo-600">${student.totalPoints || 0} pts</span>
+                    `;
+                    scoreboardElement.appendChild(listItem);
+                });
+                
+                // Si estamos en la vista de administración, actualizar también la lista de reportes
+                if (document.getElementById('admin-view').classList.contains('hidden') === false) {
+                     renderStudentListForAdmin();
+                }
+            }, (error) => {
+                console.error("Error al escuchar el scoreboard:", error);
+                document.getElementById('status-message').textContent = 'Error al cargar el Scoreboard.';
+            });
+        }
+        
+        // --- Funciones de Administración (Nuevas, Puntos 3 y 5) ---
+        
+        /**
+         * Función llamada al entrar en la vista de administración (Fix para ReferenceError).
+         * La data de estudiantes se carga y actualiza a través de setupRealtimeScoreboard.
+         */
+        function fetchStudentReports() {
+            if (isAdmin) {
+                renderStudentListForAdmin();
+            } else {
+                 document.getElementById('admin-message').textContent = "Acceso denegado.";
             }
         }
 
-        // --- Manejadores de autenticación ---
-        window.handleLogin = async () => {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            try {
-                if (!auth) throw new Error("Firebase Auth no está inicializado. Verifica tu configuración.");
-                
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log('Inicio de sesión exitoso:', userCredential.user.uid);
-                showMessage('Inicio de sesión exitoso.', false);
-                
-            } catch (error) {
-                console.error("Error en el inicio de sesión:", error);
-                
-                let errorMessage = "Error desconocido al iniciar sesión.";
+        /**
+         * Muestra la lista de estudiantes para la gestión administrativa.
+         */
+        function renderStudentListForAdmin() {
+             const adminListEl = document.getElementById('admin-student-list');
+             adminListEl.innerHTML = '';
 
-                if (error.code) {
-                    switch (error.code) {
-                        case 'auth/user-not-found':
-                        case 'auth/wrong-password':
-                            errorMessage = "Credenciales incorrectas. Verifica tu correo y contraseña.";
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage = "El formato del correo electrónico es inválido.";
-                            break;
-                        default:
-                            errorMessage = `Error de Firebase: ${error.message}`;
-                            break;
+             // Filtrar al administrador de la lista de gestión
+             const studentsToManage = allStudents.filter(s => s.userId !== ADMIN_CI).sort((a, b) => a.name.localeCompare(b.name));
+             
+             if (studentsToManage.length === 0) {
+                 adminListEl.innerHTML = '<div class="text-center p-6 text-gray-500">No hay otros estudiantes registrados.</div>';
+                 return;
+             }
+             
+             studentsToManage.forEach(student => {
+                 const status = student.isActive ? 'Activo' : 'De Baja';
+                 const statusColor = student.isActive ? 'bg-green-500' : 'bg-red-500';
+                 const actionButtonText = student.isActive ? 'Dar de Baja' : 'Reactivar';
+                 const actionButtonColor = student.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600';
+                 
+                 const studentCard = document.createElement('div');
+                 studentCard.className = 'bg-white p-4 rounded-xl shadow-md mb-3 border-l-4 border-indigo-500';
+                 studentCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-bold text-lg text-gray-800">${student.name}</p>
+                            <p class="text-sm text-gray-600">CI: ${student.userId}</p>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white ${statusColor} mt-1 inline-block">${status}</span>
+                            <span class="text-md font-extrabold text-indigo-600 block mt-2">Puntos: ${student.totalPoints}</span>
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                             <button 
+                                onclick="window.globalFunctions.viewReport('${student.userId}')"
+                                class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-indigo-700 transition duration-150 shadow-sm">
+                                Ver Reporte
+                            </button>
+                            <button 
+                                onclick="window.globalFunctions.toggleStudentStatus('${student.userId}', ${student.isActive})"
+                                class="${actionButtonColor} text-white px-3 py-1 rounded-lg text-sm font-medium transition duration-150 shadow-sm">
+                                ${actionButtonText}
+                            </button>
+                        </div>
+                    </div>
+                 `;
+                 adminListEl.appendChild(studentCard);
+             });
+        }
+        
+        /**
+         * Activa/Desactiva un estudiante (Dar de baja).
+         */
+        async function toggleStudentStatus(ci, currentStatus) {
+            if (!isAdmin) {
+                document.getElementById('status-message').textContent = "Acceso denegado. Solo administradores.";
+                return;
+            }
+
+            const newStatus = !currentStatus;
+            const studentRef = doc(db, "artifacts", appId, "public/data", "student_records", ci);
+
+            try {
+                await updateDoc(studentRef, {
+                    isActive: newStatus
+                });
+                
+                const message = newStatus ? `Estudiante ${ci} ha sido reactivado.` : `Estudiante ${ci} dado de baja (desactivado).`;
+                document.getElementById('admin-message').textContent = message;
+                document.getElementById('admin-message').className = newStatus ? 'text-green-600 font-semibold mb-4' : 'text-red-600 font-semibold mb-4';
+                
+                // La función setupRealtimeScoreboard se encargará de actualizar la lista.
+            } catch (error) {
+                console.error("Error al cambiar estado del estudiante:", error);
+                document.getElementById('admin-message').textContent = `Error al cambiar estado: ${error.message}`;
+                document.getElementById('admin-message').className = 'text-red-600 font-semibold mb-4';
+            }
+        }
+
+        /**
+         * Muestra el reporte detallado de un estudiante (Punto 5).
+         */
+        function viewReport(ci) {
+            const student = allStudents.find(s => s.userId === ci);
+            if (!student) return;
+
+            const totalActiveStudents = allStudents.length;
+            const totalPointsSum = allStudents.reduce((sum, s) => sum + (s.totalPoints || 0), 0);
+            const averagePoints = totalActiveStudents > 0 ? Math.round(totalPointsSum / totalActiveStudents) : 0;
+
+            const studentPoints = student.totalPoints || 0;
+            const gradeStatus = studentPoints >= averagePoints ? '¡Excelente! Superior al promedio.' : 'Requiere mejorar su rendimiento.';
+            const comparisonClass = studentPoints >= averagePoints ? 'text-green-600' : 'text-red-500';
+
+            // Calcular el progreso para la barra gráfica
+            // Usaremos el máximo de puntos del curso (Ej: 25 pts Clase + 50 pts Examen + 30 pts Juego = 105)
+            const MAX_POSSIBLE_POINTS = 105; 
+            const studentProgress = Math.min(100, (studentPoints / MAX_POSSIBLE_POINTS) * 100);
+            const averageProgress = Math.min(100, (averagePoints / MAX_POSSIBLE_POINTS) * 100);
+
+            // Generar HTML del gráfico (barra simple)
+            const chartHtml = `
+                <div class="space-y-4">
+                    <div class="p-3 bg-gray-50 rounded-lg shadow-inner">
+                        <p class="font-bold text-gray-700 mb-1">Puntos de ${student.name}: ${studentPoints} pts</p>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-indigo-600 h-4 rounded-full" style="width: ${studentProgress}%"></div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg shadow-inner">
+                        <p class="font-bold text-gray-700 mb-1">Promedio del Curso: ${averagePoints} pts</p>
+                         <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="bg-yellow-500 h-4 rounded-full" style="width: ${averageProgress}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Actualizar el modal
+            document.getElementById('report-title').textContent = `Reporte de Rendimiento: ${student.name}`;
+            document.getElementById('report-ci').textContent = `Cédula de Identidad: ${student.userId}`;
+            document.getElementById('report-points').innerHTML = `Puntuación Total: <span class="font-extrabold text-indigo-600">${studentPoints} pts</span>`;
+            document.getElementById('report-grade-status').innerHTML = `Estado: <span class="${comparisonClass} font-bold">${gradeStatus}</span>`;
+            document.getElementById('report-chart-container').innerHTML = chartHtml;
+
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        // --- FUNCIONES DE GEMINI (NUEVAS) ---
+
+        /**
+         * Llama a Gemini con Google Search para generar una guía de estudio.
+         * @param {string} topic - Título de la clase.
+         * @param {string} description - Descripción del contenido.
+         */
+        async function generateStudyGuide(topic, description) {
+            const buttonId = 'generate-guide-btn';
+            const outputId = 'study-guide-output';
+            const outputEl = document.getElementById(outputId);
+            const originalText = 'Generar Guía de Estudio ✨';
+
+            outputEl.innerHTML = '';
+            showLoading(buttonId);
+
+            const systemPrompt = "Actúa como un tutor de ingeniería de electrónica de nivel universitario. Tu respuesta debe ser concisa y útil.";
+            const userQuery = `Genera una guía de estudio detallada en formato Markdown para el tema: "${topic}". El contenido principal se describe como: "${description}". La guía debe incluir: 
+1. Un Resumen Conciso del Tema (2-3 frases).
+2. Las 3 Fórmulas Clave en formato LaTeX (usa $$ para delimitarlas, por ejemplo: $ $ V = I \\cdot R $ $).
+3. 3 Preguntas de Práctica con sus respuestas correctas ocultas (usa la estructura: **Pregunta: ...** y **Respuesta: ...**).
+
+Asegúrate de que la información sea precisa y esté basada en los principios de la electrónica y la Ley de Ohm.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const candidate = await callGeminiAPI(payload, true); // Usar search grounding
+                
+                let markdownText = candidate.content.parts[0].text;
+                
+                // Agregar citaciones si están disponibles
+                let sourcesHtml = '';
+                const groundingMetadata = candidate.groundingMetadata;
+                if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                    const sources = groundingMetadata.groundingAttributions
+                        .map(attribution => ({
+                            uri: attribution.web?.uri,
+                            title: attribution.web?.title,
+                        }))
+                        .filter(source => source.uri && source.title);
+
+                    if (sources.length > 0) {
+                        sourcesHtml = `<div class="mt-4 p-3 bg-gray-100 rounded-lg text-xs text-gray-600 border border-gray-200">
+                            <p class="font-semibold mb-1">Fuentes de Información:</p>
+                            ${sources.slice(0, 3).map(s => 
+                                `<a href="${s.uri}" target="_blank" class="block truncate hover:text-indigo-600">${s.title}</a>`
+                            ).join('')}
+                            </div>`;
                     }
                 }
                 
-                showMessage(errorMessage, true);
-            }
-        };
+                // Simple conversión de Markdown a HTML (solo para saltos de línea y negritas, etc.)
+                let htmlContent = markdownText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                htmlContent = htmlContent.replace(/\n/g, '<br>');
 
-        window.handleRegister = async () => {
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
+                outputEl.innerHTML = `<div class="p-4 bg-white rounded-xl shadow-inner border-t-4 border-indigo-500 text-sm">${htmlContent}</div>${sourcesHtml}`;
+
+
+            } catch (error) {
+                outputEl.innerHTML = `<p class="text-red-500 font-semibold p-4 bg-red-100 rounded-xl">Error al generar la guía: ${error.message}</p>`;
+                console.error("Error en generateStudyGuide:", error);
+            } finally {
+                hideLoading(buttonId, originalText);
+            }
+        }
+
+        /**
+         * Llama a Gemini para analizar las tendencias y generar un informe administrativo.
+         */
+        async function generateAdminReport() {
+            if (!isAdmin) return;
+
+            const buttonId = 'generate-report-btn';
+            const outputId = 'admin-report-output';
+            const outputEl = document.getElementById(outputId);
+            const originalText = 'Generar Informe de Tendencias ✨';
+
+            outputEl.innerHTML = '';
+            showLoading(buttonId);
+
+            // Preparar los datos para Gemini
+            // Filtrar y limpiar datos de estudiantes (solo información relevante)
+            const studentsData = allStudents.map(s => ({
+                name: s.name,
+                points: s.totalPoints || 0,
+                examsPassed: Object.values(s.examResults || {}).filter(res => res.passed).length,
+                gamesWon: Object.keys(s.gameResults || {}).length,
+                isAdmin: s.isAdmin
+            })).filter(s => !s.isAdmin); // Excluir al admin para el análisis de rendimiento
+
+            const studentCount = studentsData.length;
+            const dataString = JSON.stringify(studentsData, null, 2);
+
+            const systemPrompt = "Eres un analista de datos y rendimiento educativo. Tu tarea es analizar los datos de los estudiantes proporcionados y generar un informe de tendencias en formato JSON siguiendo el esquema estricto. Analiza la data de puntos, exámenes y juegos.";
             
+            const userQuery = `Analiza los siguientes ${studentCount} registros de estudiantes: \n\`\`\`json\n${dataString}\n\`\`\`\n\nCalcula y reporta el rendimiento general (puntos promedio) y genera tres (3) recomendaciones específicas y accionables para mejorar el rendimiento del curso.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "totalStudents": { "type": "INTEGER", "description": "Número total de estudiantes analizados." },
+                            "averagePoints": { "type": "NUMBER", "description": "El promedio de puntos de todos los estudiantes, redondeado al entero más cercano." },
+                            "topStudentName": { "type": "STRING", "description": "El nombre del estudiante con el puntaje más alto." },
+                            "recommendations": {
+                                "type": "ARRAY",
+                                "description": "Tres recomendaciones específicas y accionables para el curso.",
+                                "items": { "type": "STRING" }
+                            }
+                        },
+                        "required": ["totalStudents", "averagePoints", "topStudentName", "recommendations"]
+                    }
+                }
+            };
+
             try {
-                if (!auth) throw new Error("Firebase Auth no está inicializado. Verifica tu configuración.");
-                
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                
-                // Guardar datos básicos del usuario en una colección 'profiles' (estándar para Firebase público)
-                // NOTA: Recuerda configurar las reglas de seguridad de Firestore para permitir esto.
-                const userRef = doc(db, "profiles", userCredential.user.uid);
-                await setDoc(userRef, {
-                    email: userCredential.user.email,
-                    createdAt: new Date().toISOString(),
-                    userId: userCredential.user.uid
+                const candidate = await callGeminiAPI(payload, false); // No necesita Google Search
+                const jsonText = candidate.content.parts[0].text;
+                const report = JSON.parse(jsonText);
+
+                // Renderizar el informe en formato visual
+                const reportHtml = `
+                    <div class="p-5 bg-white rounded-xl shadow-lg border-t-4 border-purple-500">
+                        <h3 class="text-xl font-bold text-purple-700 mb-4">Resumen Ejecutivo del Curso</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+                            <div class="p-3 bg-indigo-100 rounded-lg">
+                                <p class="text-xs font-medium text-indigo-600">Total Estudiantes</p>
+                                <p class="text-2xl font-extrabold text-indigo-800">${report.totalStudents}</p>
+                            </div>
+                            <div class="p-3 bg-indigo-100 rounded-lg">
+                                <p class="text-xs font-medium text-indigo-600">Puntos Promedio</p>
+                                <p class="text-2xl font-extrabold text-indigo-800">${report.averagePoints}</p>
+                            </div>
+                        </div>
+
+                        <p class="text-lg font-semibold text-gray-700 mb-4">Mejor Estudiante: <span class="text-green-600 font-extrabold">${report.topStudentName}</span></p>
+
+                        <h4 class="font-bold text-purple-700 mt-6 mb-2 border-b pb-1">Recomendaciones de Acción</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700 text-sm pl-4">
+                            ${report.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                outputEl.innerHTML = reportHtml;
+
+            } catch (error) {
+                outputEl.innerHTML = `<p class="text-red-500 font-semibold p-4 bg-red-100 rounded-xl">Error al generar el informe: El modelo no pudo devolver el JSON estructurado. Intente nuevamente.</p>`;
+                console.error("Error en generateAdminReport:", error);
+            } finally {
+                hideLoading(buttonId, originalText);
+            }
+        }
+        
+        // --- FIN FUNCIONES DE GEMINI ---
+
+
+        // --- Funciones de navegación y renderizado ---
+        
+        function fetchClasses() { /* ... Lógica existente ... */
+            const classesRef = collection(db, "artifacts", appId, "public/data", "classes");
+            const listEl = document.getElementById('classes-list-container');
+            
+            onSnapshot(classesRef, (snapshot) => {
+                listEl.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const classData = doc.data();
+                    const isCompleted = studentData.completedClasses && studentData.completedClasses[classData.id];
+                    
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-4 rounded-xl shadow-md mb-4 flex justify-between items-center border-l-4 border-indigo-500';
+                    card.innerHTML = `
+                        <div>
+                            <p class="font-bold text-lg text-gray-800">${classData.title}</p>
+                            <p class="text-sm text-gray-600">${classData.duration} | ${classData.pointsAwarded} pts</p>
+                        </div>
+                        <button 
+                            onclick="switchView('class-detail', ${JSON.stringify(classData).replace(/"/g, '&quot;')})"
+                            class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-indigo-700 transition duration-150 shadow-sm">
+                            ${isCompleted ? 'Revisar ✔️' : 'Empezar'}
+                        </button>
+                    `;
+                    listEl.appendChild(card);
+                });
+            }, (error) => {
+                console.error("Error al cargar clases:", error);
+            });
+        }
+        
+        function renderClassDetail(classData) { /* ... Lógica existente ... */
+            document.getElementById('class-detail-title').textContent = classData.title;
+            document.getElementById('class-detail-description').textContent = classData.description;
+            document.getElementById('class-detail-points').textContent = classData.pointsAwarded;
+            document.getElementById('class-detail-video').src = classData.contentUrl;
+
+            const completeBtn = document.getElementById('complete-class-btn');
+            const isCompleted = studentData.completedClasses && studentData.completedClasses[classData.id];
+            
+            if (isCompleted) {
+                completeBtn.textContent = 'Clase Completada ✔️';
+                completeBtn.disabled = true;
+                completeBtn.className = 'w-full bg-green-500 text-white p-3 rounded-xl font-bold shadow-lg mt-4 opacity-75 cursor-not-allowed';
+            } else {
+                completeBtn.textContent = 'Marcar como Completada y Ganar Puntos';
+                completeBtn.disabled = false;
+                completeBtn.className = 'w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-lg mt-4';
+                completeBtn.onclick = () => completeClass(classData.id, classData.pointsAwarded);
+            }
+            
+            // Integración de Gemini
+            const guideBtn = document.getElementById('generate-guide-btn');
+            guideBtn.onclick = () => generateStudyGuide(classData.title, classData.description);
+            document.getElementById('study-guide-output').innerHTML = '';
+        }
+        
+        async function completeClass(classId, points) { /* ... Lógica existente ... */
+             if (studentData.completedClasses && studentData.completedClasses[classId]) return;
+
+            const studentRef = doc(db, "artifacts", appId, "public/data", "student_records", currentUserCi);
+            
+            const newCompletedClasses = { ...studentData.completedClasses, [classId]: { completedAt: new Date().toISOString(), pointsEarned: points } };
+            const newTotalPoints = (studentData.totalPoints || 0) + points;
+
+            try {
+                await updateDoc(studentRef, {
+                    completedClasses: newCompletedClasses,
+                    totalPoints: newTotalPoints,
+                    lastActive: new Date().toISOString()
                 });
 
-                console.log('Registro exitoso:', userCredential.user.uid);
-                showMessage('Registro exitoso. Ya puedes iniciar sesión.', false);
+                document.getElementById('class-detail-status').textContent = `¡Felicidades! Ganaste ${points} puntos.`;
+                document.getElementById('class-detail-status').classList.remove('hidden');
                 
+                renderClassDetail(studentData); // Vuelve a renderizar para actualizar el botón
             } catch (error) {
-                console.error("Error en el registro:", error);
-                
-                let errorMessage = "Error desconocido al registrar.";
-
-                if (error.code) {
-                    switch (error.code) {
-                        case 'auth/operation-not-allowed':
-                            errorMessage = "¡Error de Configuración! La autenticación por Email/Contraseña NO está habilitada en tu consola de Firebase.";
-                            break;
-                        case 'auth/email-already-in-use':
-                            errorMessage = "El correo electrónico ya está registrado.";
-                            break;
-                        case 'auth/weak-password':
-                            errorMessage = "La contraseña es muy débil (mínimo 6 caracteres).";
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage = "El formato del correo electrónico es inválido.";
-                            break;
-                        default:
-                            errorMessage = `Error de Firebase: ${error.message}`;
-                            break;
-                    }
-                }
-                
-                showMessage(errorMessage, true);
+                console.error("Error al completar clase:", error);
             }
-        };
-        // --- Fin de los manejadores de autenticación ---
+        }
+        
+        function fetchExams() { /* ... Lógica existente ... */
+             const examsRef = collection(db, "artifacts", appId, "public/data", "exams");
+            const listEl = document.getElementById('exams-list-container');
+            
+            onSnapshot(examsRef, (snapshot) => {
+                listEl.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const examData = doc.data();
+                    const result = studentData.examResults ? studentData.examResults[examData.id] : null;
+                    const statusText = result ? (result.passed ? `Aprobado (${result.score}%) ✔️` : `Reprobado (${result.score}%) ❌`) : 'No tomado';
+                    const statusColor = result ? (result.passed ? 'text-green-600' : 'text-red-500') : 'text-gray-500';
+                    const buttonText = result ? 'Ver Detalles' : 'Empezar Examen';
 
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-4 rounded-xl shadow-md mb-4 flex justify-between items-center border-l-4 border-indigo-500';
+                    card.innerHTML = `
+                        <div>
+                            <p class="font-bold text-lg text-gray-800">${examData.title}</p>
+                            <p class="text-sm text-gray-600">Puntos a Ganar: ${examData.rewardPoints}</p>
+                            <p class="text-xs font-semibold ${statusColor}">Estado: ${statusText}</p>
+                        </div>
+                        <button 
+                            onclick="switchView('exam-view', ${JSON.stringify(examData).replace(/"/g, '&quot;')})"
+                            class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-indigo-700 transition duration-150 shadow-sm">
+                            ${buttonText}
+                        </button>
+                    `;
+                    listEl.appendChild(card);
+                });
+            }, (error) => {
+                console.error("Error al cargar exámenes:", error);
+            });
+        }
+        
+        function renderExam(examData) { /* ... Lógica existente ... */
+            currentExam = {
+                ...examData,
+                currentQuestionIndex: 0,
+                userAnswers: Array(examData.questions.length).fill(null),
+                isCompleted: false
+            };
+            
+            document.getElementById('exam-view-title').textContent = examData.title;
+            document.getElementById('exam-view-description').textContent = examData.description;
+            document.getElementById('exam-status').textContent = '';
+            document.getElementById('exam-status').classList.add('hidden');
+            
+            // Revisar si ya fue tomado y mostrar el resultado en lugar del examen
+            const result = studentData.examResults ? studentData.examResults[examData.id] : null;
+            if (result) {
+                 displayExamResult(result, examData.passingScore);
+            } else {
+                 document.getElementById('exam-quiz-container').classList.remove('hidden');
+                 document.getElementById('exam-result-container').classList.add('hidden');
+                 renderCurrentQuestion();
+            }
+        }
+        
+        function renderCurrentQuestion() { /* ... Lógica existente ... */
+             const question = currentExam.questions[currentExam.currentQuestionIndex];
+             const container = document.getElementById('exam-question-container');
+             const progressEl = document.getElementById('exam-progress');
+             
+             container.innerHTML = `
+                <p class="text-lg font-semibold mb-4 text-gray-800">${currentExam.currentQuestionIndex + 1}. ${question.text}</p>
+                <div id="options-container" class="space-y-3">
+                ${question.options.map((option, index) => `
+                    <button type="button" 
+                        onclick="selectAnswer('${option}')"
+                        data-option="${option}"
+                        class="w-full text-left p-3 border-2 border-indigo-200 rounded-xl transition duration-150 ease-in-out hover:bg-indigo-100 
+                            ${currentExam.userAnswers[currentExam.currentQuestionIndex] === option ? 'bg-indigo-200 font-bold border-indigo-500' : 'bg-white'}">
+                        ${option}
+                    </button>
+                `).join('')}
+                </div>
+             `;
+             
+             progressEl.textContent = `Pregunta ${currentExam.currentQuestionIndex + 1} de ${currentExam.questions.length}`;
+             
+             document.getElementById('exam-next-btn').disabled = currentExam.userAnswers[currentExam.currentQuestionIndex] === null;
+             document.getElementById('exam-prev-btn').disabled = currentExam.currentQuestionIndex === 0;
+        }
+        
+        function selectAnswer(answer) { /* ... Lógica existente ... */
+            currentExam.userAnswers[currentExam.currentQuestionIndex] = answer;
+            renderCurrentQuestion(); // Vuelve a renderizar para actualizar el estado del botón
+        }
+
+        function nextQuestion() { /* ... Lógica existente ... */
+            if (currentExam.currentQuestionIndex < currentExam.questions.length - 1) {
+                currentExam.currentQuestionIndex++;
+                renderCurrentQuestion();
+            } else if (currentExam.currentQuestionIndex === currentExam.questions.length - 1) {
+                submitExam();
+            }
+        }
+        
+        function prevQuestion() { /* ... Lógica existente ... */
+            if (currentExam.currentQuestionIndex > 0) {
+                currentExam.currentQuestionIndex--;
+                renderCurrentQuestion();
+            }
+        }
+
+        async function submitExam() { /* ... Lógica existente ... */
+            if (currentExam.isCompleted) return;
+            
+            let correctCount = 0;
+            currentExam.questions.forEach((q, index) => {
+                if (currentExam.userAnswers[index] === q.correctAnswer) {
+                    correctCount++;
+                }
+            });
+            
+            const totalQuestions = currentExam.questions.length;
+            const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
+            const passed = scorePercentage >= currentExam.passingScore;
+            const reward = passed ? currentExam.rewardPoints : 0;
+            
+            const newResult = {
+                score: scorePercentage,
+                passed: passed,
+                correctCount: correctCount,
+                totalQuestions: totalQuestions,
+                reward: reward,
+                submittedAt: new Date().toISOString()
+            };
+
+            // 1. Actualizar el registro del estudiante en Firestore
+            const studentRef = doc(db, "artifacts", appId, "public/data", "student_records", currentUserCi);
+            const newExamResults = { ...studentData.examResults, [currentExam.id]: newResult };
+            const newTotalPoints = (studentData.totalPoints || 0) + reward;
+
+            try {
+                await updateDoc(studentRef, {
+                    examResults: newExamResults,
+                    totalPoints: newTotalPoints,
+                    lastActive: new Date().toISOString()
+                });
+                
+                currentExam.isCompleted = true; // Marcar como completado
+                displayExamResult(newResult, currentExam.passingScore);
+
+            } catch (error) {
+                document.getElementById('exam-status').textContent = `Error al guardar el resultado: ${error.message}`;
+                document.getElementById('exam-status').classList.remove('hidden');
+                console.error("Error al guardar examen:", error);
+            }
+        }
+        
+        function displayExamResult(result, passingScore) { /* ... Lógica existente ... */
+             document.getElementById('exam-quiz-container').classList.add('hidden');
+             document.getElementById('exam-result-container').classList.remove('hidden');
+
+             const statusText = result.passed ? '¡Aprobado! 🎉' : 'Reprobado 😔';
+             const statusColor = result.passed ? 'bg-green-500' : 'bg-red-500';
+             const resultMessage = result.passed ? 
+                                   `¡Felicidades, ganaste ${result.reward} puntos!` : 
+                                   `Necesitas ${passingScore}% para aprobar. ¡Inténtalo de nuevo!`;
+
+             document.getElementById('final-score').textContent = `${result.score}%`;
+             document.getElementById('result-status').textContent = statusText;
+             document.getElementById('result-status').className = `text-2xl font-bold text-white p-2 rounded-xl ${statusColor} mb-4`;
+             document.getElementById('result-message').textContent = resultMessage;
+             document.getElementById('correct-count').textContent = `${result.correctCount} / ${result.totalQuestions}`;
+             document.getElementById('retry-exam-btn').onclick = () => switchView('exams-list');
+        }
+
+        // --- Lógica de Mini-Juegos ---
+        
+        function fetchGames() { /* ... Lógica existente ... */
+            const gamesRef = collection(db, "artifacts", appId, "public/data", "games");
+            const listEl = document.getElementById('games-list-container');
+            
+            onSnapshot(gamesRef, (snapshot) => {
+                listEl.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const gameData = doc.data();
+                    const lastResult = studentData.gameResults ? studentData.gameResults[gameData.id] : null;
+                    const lastScore = lastResult ? lastResult.score : 'N/A';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-4 rounded-xl shadow-md mb-4 flex justify-between items-center border-l-4 border-indigo-500';
+                    card.innerHTML = `
+                        <div>
+                            <p class="font-bold text-lg text-gray-800">${gameData.title}</p>
+                            <p class="text-sm text-gray-600">${gameData.description}</p>
+                            <p class="text-xs font-semibold text-gray-500">Máximo Puntaje Anterior: ${lastScore}</p>
+                        </div>
+                        <button 
+                            onclick="window.globalFunctions.startGame('${gameData.id}', ${JSON.stringify(gameData).replace(/"/g, '&quot;')})"
+                            class="bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-green-700 transition duration-150 shadow-sm">
+                            Jugar
+                        </button>
+                    `;
+                    listEl.appendChild(card);
+                });
+            }, (error) => {
+                console.error("Error al cargar juegos:", error);
+            });
+        }
+
+        function startGame(gameId, gameData) { /* ... Lógica existente ... */
+             switchView('game-view');
+             document.getElementById('game-title').textContent = gameData.title;
+             document.getElementById('game-reward').textContent = gameData.maxRewardPoints;
+
+             // Inicializar estado del juego
+             currentGameState = {
+                gameId: gameId,
+                score: 0,
+                questionCount: 0,
+                targetQuestions: gameData.minQuestions || 10,
+                reward: gameData.maxRewardPoints || 30,
+                startTime: Date.now()
+             };
+             
+             // Limpiar y empezar
+             document.getElementById('game-output').innerHTML = '';
+             document.getElementById('game-status').classList.add('hidden');
+             generateMathQuestion();
+        }
+
+        function generateMathQuestion() { /* ... Lógica existente ... */
+            if (currentGameState.questionCount >= currentGameState.targetQuestions) {
+                endGame();
+                return;
+            }
+
+            const R = Math.floor(Math.random() * 9) + 1; // 1 to 9 Ohms
+            const I = Math.floor(Math.random() * 5) + 1; // 1 to 5 Amperes
+            const V = R * I; // Voltage
+            
+            const problemType = Math.floor(Math.random() * 3); // 0=V, 1=I, 2=R
+            let questionText = '';
+            let correctAnswer = 0;
+            
+            if (problemType === 0) { // Find V
+                 questionText = `En un circuito con una Resistencia (R) de ${R} $\\Omega$ y una Corriente (I) de ${I} A, ¿cuál es el Voltaje (V) en Voltios?`;
+                 correctAnswer = V;
+            } else if (problemType === 1) { // Find I
+                 questionText = `Un circuito tiene un Voltaje (V) de ${V} V y una Resistencia (R) de ${R} $\\Omega$. ¿Cuál es la Corriente (I) en Amperios?`;
+                 correctAnswer = I;
+            } else { // Find R
+                 questionText = `Si el Voltaje (V) es de ${V} V y la Corriente (I) es de ${I} A, ¿cuál es la Resistencia (R) en Ohms?`;
+                 correctAnswer = R;
+            }
+
+            currentGameState.correctAnswer = correctAnswer;
+            currentGameState.questionCount++;
+            
+            const questionHtml = `
+                <p class="text-xl font-bold mb-4 text-gray-800">${questionText}</p>
+                <input type="number" id="game-answer-input" placeholder="Ingresa tu respuesta (solo números)" 
+                       class="w-full p-3 border-2 border-indigo-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 text-center text-lg">
+                <button type="button" onclick="checkAnswer()" id="check-answer-btn"
+                        class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-lg mt-4">
+                    Verificar Respuesta
+                </button>
+            `;
+
+            document.getElementById('game-output').innerHTML = questionHtml;
+            document.getElementById('game-score').textContent = currentGameState.score;
+            document.getElementById('game-progress').textContent = `Problema ${currentGameState.questionCount} de ${currentGameState.targetQuestions}`;
+        }
+
+        function checkAnswer() { /* ... Lógica existente ... */
+             const inputEl = document.getElementById('game-answer-input');
+             const answer = parseFloat(inputEl.value);
+             const feedbackEl = document.getElementById('game-feedback');
+             
+             if (isNaN(answer)) {
+                 feedbackEl.textContent = 'Por favor, introduce un número.';
+                 feedbackEl.className = 'text-red-500 mt-2';
+                 return;
+             }
+
+             if (answer === currentGameState.correctAnswer) {
+                 currentGameState.score++;
+                 feedbackEl.textContent = '¡Correcto! Siguiente problema...';
+                 feedbackEl.className = 'text-green-600 font-bold mt-2';
+             } else {
+                 feedbackEl.textContent = `Incorrecto. La respuesta era ${currentGameState.correctAnswer}. Siguiente problema...`;
+                 feedbackEl.className = 'text-red-600 font-bold mt-2';
+             }
+             
+             // Retraso para mostrar la retroalimentación antes de la siguiente pregunta
+             document.getElementById('check-answer-btn').disabled = true;
+             setTimeout(() => {
+                 feedbackEl.textContent = '';
+                 generateMathQuestion();
+             }, 1000);
+        }
+        
+        async function endGame() { /* ... Lógica existente ... */
+            const finalScore = currentGameState.score;
+            const pointsEarned = finalScore === currentGameState.targetQuestions ? currentGameState.reward : 0;
+
+            const finalResult = {
+                score: finalScore,
+                target: currentGameState.targetQuestions,
+                pointsEarned: pointsEarned,
+                completedAt: new Date().toISOString()
+            };
+
+            // 1. Actualizar el registro del estudiante en Firestore
+            const studentRef = doc(db, "artifacts", appId, "public/data", "student_records", currentUserCi);
+            
+            // Asumiendo que solo hay un juego por ahora, actualizamos el resultado anterior si el nuevo es mejor.
+            const existingResult = studentData.gameResults ? studentData.gameResults[currentGameState.gameId] : null;
+            let newGameResults = studentData.gameResults || {};
+            let newTotalPoints = studentData.totalPoints || 0;
+            
+            if (!existingResult || finalScore > existingResult.score) {
+                 // Si es el primer resultado o si el nuevo puntaje es mejor, actualizamos puntos
+                 const pointsDifference = finalScore > existingResult?.score ? pointsEarned - (existingResult?.pointsEarned || 0) : pointsEarned;
+                 newTotalPoints += pointsDifference;
+                 newGameResults = { ...newGameResults, [currentGameState.gameId]: finalResult };
+                 
+                 await updateDoc(studentRef, {
+                    gameResults: newGameResults,
+                    totalPoints: newTotalPoints,
+                    lastActive: new Date().toISOString()
+                 });
+            } else {
+                 // Si el puntaje es menor o igual, solo actualizamos el tiempo de actividad.
+                 await updateDoc(studentRef, {
+                    lastActive: new Date().toISOString()
+                 });
+            }
+            
+            // 2. Mostrar el resultado final
+            document.getElementById('game-output').innerHTML = `
+                <div class="text-center p-6 bg-white rounded-xl shadow-xl">
+                    <h3 class="text-3xl font-extrabold text-indigo-600 mb-2">¡Juego Terminado!</h3>
+                    <p class="text-xl font-bold text-gray-800">Puntuación Final: ${finalScore} / ${currentGameState.targetQuestions}</p>
+                    <p class="text-lg mt-3 ${pointsEarned > 0 ? 'text-green-600 font-extrabold' : 'text-red-500'}">
+                        ${pointsEarned > 0 ? `¡Ganaste ${pointsEarned} puntos!` : 'No obtuviste la puntuación perfecta para ganar puntos.'}
+                    </p>
+                    <button type="button" onclick="switchView('games-list')"
+                            class="mt-6 bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
+                        Volver a los Juegos
+                    </button>
+                </div>
+            `;
+            document.getElementById('game-feedback').textContent = '';
+        }
+        
+        // --- Setup y Eventos Globales ---
+
+        // Se exponen las funciones necesarias al ámbito global para los event handlers en el HTML
+        window.globalFunctions = {
+            handleLogin,
+            switchView,
+            completeClass,
+            selectAnswer,
+            nextQuestion,
+            prevQuestion,
+            startGame,
+            checkAnswer,
+            viewReport, // Para el modal de reporte
+            closeReportModal, // Para cerrar el modal
+            toggleStudentStatus, // Para la gestión de estudiantes (admin)
+            generateAdminReport // Para la función de Gemini en Admin
+        };
 
         // Iniciar la aplicación
-        initializeFirebase();
-
+        document.addEventListener('DOMContentLoaded', initializeAndAuthenticate);
     </script>
+    <!-- Estilos de Telegram Mini App y Tailwind -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .tab-btn {
+            /* Cambiado de flex-1 a ancho basado en contenido, añadido padding horizontal y whitespace-nowrap para evitar que el texto se amontone */
+            @apply px-4 py-3 text-center rounded-t-xl font-semibold transition duration-150 whitespace-nowrap;
+        }
+        .active-tab {
+            @apply bg-indigo-600 text-white shadow-lg;
+        }
+        .inactive-tab {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+        }
+        /* Estilos específicos para el video de YouTube en el detalle de la clase */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mensaje de Estado (Para errores o mensajes importantes) -->
+    <div id="status-message" class="text-center p-3 text-sm text-green-600 font-medium hidden"></div>
+
+    <!-- ---------------------------------------------------- -->
+    <!-- 1. VISTA DE INICIO DE SESIÓN / REGISTRO (Login) -->
+    <!-- ---------------------------------------------------- -->
+    <div id="login-view" class="p-6 max-w-md mx-auto h-screen flex flex-col justify-center items-center">
+        <div class="w-full p-8 bg-white rounded-2xl shadow-2xl">
+            <h1 class="text-3xl font-extrabold text-center text-indigo-600 mb-2">ElectroLandia III ⚡</h1>
+            <p class="text-center text-gray-500 mb-6">Accede o regístrate con tu Cédula</p>
+            
+            <form onsubmit="window.globalFunctions.handleLogin(event)">
+                <div class="mb-4">
+                    <label for="login-ci" class="block text-sm font-medium text-gray-700 mb-1">Cédula de Identidad (CI)</label>
+                    <input type="text" id="login-ci" required placeholder="Ej: 12345678" 
+                           class="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="mb-6">
+                    <label for="login-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                    <input type="text" id="login-name" required placeholder="Tu nombre" 
+                           class="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <button type="submit" 
+                        class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
+                    Entrar
+                </button>
+            </form>
+            <p id="login-message" class="text-center mt-4 text-sm text-red-500"></p>
+        </div>
+        <p class="mt-4 text-xs text-gray-400">CI de Administrador: <span class="font-mono">12345678</span></p>
+    </div>
+
+    <!-- ---------------------------------------------------- -->
+    <!-- 2. CONTENEDOR PRINCIPAL DE LA APP (DASHBOARD Y VISTAS) -->
+    <!-- ---------------------------------------------------- -->
+    <div id="main-content-wrapper" class="hidden min-h-screen bg-gray-50 pb-20">
+        <header class="bg-white sticky top-0 z-10 shadow-md">
+            <!-- Pestañas de Navegación -->
+            <!-- Se agregó overflow-x-auto para el desplazamiento horizontal en móviles y space-x-1 para separación -->
+            <div class="flex border-b border-gray-200 overflow-x-auto space-x-1 px-1">
+                <button id="dashboard-tab" onclick="window.globalFunctions.switchView('dashboard')" class="tab-btn active-tab">Inicio</button>
+                <button id="classes-tab" onclick="window.globalFunctions.switchView('classes-list')" class="tab-btn inactive-tab">Clases</button>
+                <button id="exams-tab" onclick="window.globalFunctions.switchView('exams-list')" class="tab-btn inactive-tab">Exámenes</button>
+                <button id="games-tab" onclick="window.globalFunctions.switchView('games-list')" class="tab-btn inactive-tab">Juegos</button>
+                <button id="about-tab" onclick="window.globalFunctions.switchView('about-view')" class="tab-btn inactive-tab">Acerca de</button> 
+                <button id="admin-tab" onclick="window.globalFunctions.switchView('admin-view')" class="tab-btn inactive-tab hidden">Admin</button>
+            </div>
+        </header>
+
+        <main class="p-4">
+            
+            <!-- VISTA DE DASHBOARD -->
+            <div id="dashboard-view" class="space-y-6">
+                <div class="bg-white p-5 rounded-2xl shadow-xl border-t-4 border-indigo-600">
+                    <h2 class="text-xl font-extrabold text-gray-800 mb-2">Mi Progreso</h2>
+                    <p class="text-sm text-gray-500 mb-4">CI Activa: <span id="current-user-id" class="font-mono font-bold"></span></p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                            <p class="text-xs font-medium text-indigo-600">Puntos Totales</p>
+                            <p id="dashboard-points" class="text-2xl font-extrabold text-indigo-800">0</p>
+                        </div>
+                        <div class="text-center p-3 bg-green-50 rounded-lg">
+                            <p class="text-xs font-medium text-green-600">Exámenes Aprobados</p>
+                            <p id="dashboard-exams-passed" class="text-2xl font-extrabold text-green-800">0 / 1</p>
+                        </div>
+                        <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                            <p class="text-xs font-medium text-yellow-600">Juegos Ganados</p>
+                            <p id="dashboard-games-won" class="text-2xl font-extrabold text-yellow-800">0 veces</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scoreboard (Tabla de Puntuaciones) -->
+                <div class="bg-white p-5 rounded-2xl shadow-xl">
+                    <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-7h2v5H9v-5zm0-4h2v2H9V7z" clip-rule="evenodd"/></svg>
+                        Top 10 Puntuaciones
+                    </h2>
+                    <ul id="scoreboard-list" class="divide-y divide-gray-100">
+                        <!-- Lista de estudiantes en tiempo real -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- VISTA DE LISTA DE CLASES -->
+            <div id="classes-list-view" class="hidden space-y-4">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-4 border-b pb-2">Clases Disponibles</h2>
+                <div id="classes-list-container">
+                    <!-- Cards de Clases se insertan aquí -->
+                </div>
+            </div>
+
+            <!-- VISTA DE DETALLE DE CLASE -->
+            <div id="class-detail-view" class="hidden space-y-4">
+                <div class="bg-white p-6 rounded-2xl shadow-xl">
+                    <h2 id="class-detail-title" class="text-2xl font-extrabold text-indigo-600 mb-3"></h2>
+                    <p id="class-detail-description" class="text-gray-700 mb-4"></p>
+                    <p class="text-sm font-semibold text-gray-500 mb-4">Puntos al completar: <span id="class-detail-points" class="text-indigo-600 font-bold"></span></p>
+
+                    <!-- Contenedor de Video (Embed) -->
+                    <div class="video-container">
+                        <iframe id="class-detail-video" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+
+                    <button id="complete-class-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-lg mt-4">
+                        Marcar como Completada y Ganar Puntos
+                    </button>
+                    <p id="class-detail-status" class="text-center mt-3 text-sm text-green-600 font-bold hidden"></p>
+                    
+                    <hr class="my-6 border-t border-gray-200">
+
+                    <!-- SECCIÓN DE GENERACIÓN DE GUÍA (GEMINI) -->
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Herramientas de Estudio por IA</h3>
+                    <button id="generate-guide-btn" class="w-full bg-purple-600 text-white p-3 rounded-xl font-bold hover:bg-purple-700 transition duration-300 shadow-lg mt-4">
+                        Generar Guía de Estudio ✨
+                    </button>
+                    <div id="study-guide-output" class="mt-4">
+                        <!-- Output de la guía de estudio -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA DE LISTA DE EXÁMENES -->
+            <div id="exams-list-view" class="hidden space-y-4">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-4 border-b pb-2">Exámenes Disponibles</h2>
+                <div id="exams-list-container">
+                    <!-- Cards de Exámenes se insertan aquí -->
+                </div>
+            </div>
+
+            <!-- VISTA DE EXAMEN (Quiz) -->
+            <div id="exam-view" class="hidden space-y-4">
+                <div class="bg-white p-6 rounded-2xl shadow-xl">
+                    <h2 id="exam-view-title" class="text-2xl font-extrabold text-red-600 mb-3 border-b pb-2"></h2>
+                    <p id="exam-view-description" class="text-gray-700 mb-4"></p>
+                    <p id="exam-status" class="text-center text-sm font-bold p-2 bg-red-100 text-red-600 rounded-lg hidden"></p>
+
+                    <!-- Contenedor del Quiz (Visible si no se ha tomado) -->
+                    <div id="exam-quiz-container" class="space-y-4">
+                        <div id="exam-question-container" class="p-4 border border-gray-200 rounded-xl bg-gray-50">
+                            <!-- Contenido de la pregunta actual -->
+                        </div>
+
+                        <div class="flex justify-between items-center mt-4">
+                            <button id="exam-prev-btn" onclick="window.globalFunctions.prevQuestion()" 
+                                    class="bg-gray-300 text-gray-700 p-3 rounded-xl font-bold hover:bg-gray-400 transition duration-300 shadow-md" disabled>
+                                Anterior
+                            </button>
+                            <span id="exam-progress" class="font-semibold text-indigo-600">Pregunta 1 de 3</span>
+                            <button id="exam-next-btn" onclick="window.globalFunctions.nextQuestion()" 
+                                    class="bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-md" disabled>
+                                Siguiente / Finalizar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedor de Resultado (Visible después de tomar el examen) -->
+                    <div id="exam-result-container" class="hidden text-center p-6 border-2 border-dashed border-gray-300 rounded-xl">
+                        <p id="result-status" class="text-2xl font-bold text-white p-2 rounded-xl bg-green-500 mb-4"></p>
+                        <p class="text-xl font-bold text-gray-800 mb-2">Puntuación Final: <span id="final-score" class="text-indigo-600"></span></p>
+                        <p class="text-md text-gray-600 mb-4">Respuestas Correctas: <span id="correct-count" class="font-bold"></span></p>
+                        <p id="result-message" class="text-lg text-green-700 font-semibold mb-6"></p>
+                        
+                        <button id="retry-exam-btn" class="bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
+                            Volver a Exámenes
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- VISTA DE LISTA DE JUEGOS -->
+            <div id="games-list-view" class="hidden space-y-4">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-4 border-b pb-2">Mini-Juegos de Práctica</h2>
+                <div id="games-list-container">
+                    <!-- Cards de Juegos se insertan aquí -->
+                </div>
+            </div>
+
+            <!-- VISTA DE JUEGO (Math Challenge) -->
+            <div id="game-view" class="hidden space-y-4">
+                <div class="bg-white p-6 rounded-2xl shadow-xl text-center">
+                    <h2 id="game-title" class="text-2xl font-extrabold text-green-600 mb-3"></h2>
+                    <p class="text-sm font-semibold text-gray-500 mb-4">Recompensa Máxima: <span id="game-reward" class="text-green-600 font-bold"></span> puntos</p>
+                    
+                    <div class="p-3 bg-indigo-50 rounded-lg shadow-inner mb-4 flex justify-around">
+                        <p class="font-bold text-gray-700">Puntos: <span id="game-score" class="text-indigo-600">0</span></p>
+                        <p class="font-bold text-gray-700">Progreso: <span id="game-progress" class="text-indigo-600">0 de 10</span></p>
+                    </div>
+
+                    <!-- Contenedor de Pregunta del Juego -->
+                    <div id="game-output" class="p-4 border border-gray-200 rounded-xl bg-gray-50 space-y-4">
+                        <!-- Pregunta y campo de respuesta se insertan aquí -->
+                    </div>
+                    <p id="game-feedback" class="mt-4 text-center text-md font-semibold"></p>
+                    
+                    <button type="button" onclick="window.globalFunctions.switchView('games-list')"
+                            class="mt-6 bg-gray-500 text-white p-3 rounded-xl font-bold hover:bg-gray-600 transition duration-300 shadow-md">
+                        Volver al Menú de Juegos
+                    </button>
+
+                </div>
+            </div>
+            
+            <!-- VISTA DE ADMINISTRACIÓN -->
+            <div id="admin-view" class="hidden space-y-6">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-4 border-b pb-2">Panel de Administración</h2>
+                
+                <!-- Gestión de Estudiantes -->
+                <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-red-500">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Gestión de Usuarios</h3>
+                    <p id="admin-message" class="text-green-600 font-semibold mb-4"></p>
+                    <div id="admin-student-list">
+                        <!-- Lista de estudiantes con opción de dar de baja/activar -->
+                    </div>
+                </div>
+
+                <!-- Análisis de Tendencias (GEMINI) -->
+                <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-purple-500">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Análisis de Tendencias del Curso</h3>
+                    
+                    <button id="generate-report-btn" onclick="window.globalFunctions.generateAdminReport()"
+                        class="w-full bg-purple-600 text-white p-3 rounded-xl font-bold hover:bg-purple-700 transition duration-300 shadow-lg">
+                        Generar Informe de Tendencias ✨
+                    </button>
+                    <div id="admin-report-output" class="mt-4">
+                        <!-- Output del informe de tendencias -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: ACERCA DE -->
+            <div id="about-view" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-indigo-600 text-center">
+                    <h2 class="text-3xl font-extrabold text-indigo-600 mb-6">Acerca de ElectroLandia III</h2>
+                    
+                    <div class="mb-8">
+                        <p class="text-lg font-semibold text-gray-800 mb-2">La Mini App</p>
+                        <p class="text-gray-700 leading-relaxed">
+                            **ElectroLandia III** es una Mini App educativa diseñada para estudiantes de electrónica y electricidad. 
+                            Nuestro objetivo es gamificar el aprendizaje de conceptos fundamentales (como la Ley de Ohm, potencia y circuitos básicos) 
+                            a través de videos interactivos, exámenes con puntuación y mini-juegos de desafío rápido. ¡Aprende, compite y gana puntos!
+                        </p>
+                    </div>
+
+                    <hr class="my-6 border-t border-gray-200">
+
+                    <div class="mb-4">
+                        <img src="https://placehold.co/128x128/4f46e5/ffffff?text=Creator" 
+                             alt="Foto del Creador" 
+                             class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-indigo-200 object-cover">
+                        
+                        <p class="text-xl font-bold text-gray-800">Dr. Simón Bolívar Pérez</p>
+                        <p class="text-indigo-600 font-semibold mb-3">Diseñador y Arquitecto de Sistemas Educativos</p>
+                        
+                        <p class="text-sm text-gray-600 leading-relaxed max-w-sm mx-auto">
+                            Simón es un entusiasta de la educación tecnológica con un doctorado en Ingeniería. Creó **ElectroLandia III** con el fin de hacer que los conceptos complejos de la electrónica sean accesibles, divertidos y gratificantes 
+                            para la próxima generación de ingenieros. Su lema es: "Si no es un juego, no es divertido."
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+            <!-- FIN VISTA -->
+
+        </main>
+    </div>
+
+    <!-- MODAL DE REPORTE DE ESTUDIANTE -->
+    <div id="report-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="report-title" class="text-xl font-extrabold text-indigo-600">Reporte de Rendimiento</h3>
+                <button onclick="window.globalFunctions.closeReportModal()" class="text-gray-400 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <p id="report-ci" class="text-sm text-gray-500 mb-4"></p>
+            <p id="report-points" class="text-lg font-bold text-gray-800 mb-4"></p>
+            <p id="report-grade-status" class="text-md font-semibold mb-4 border-t pt-2"></p>
+
+            <div id="report-chart-container" class="mb-6">
+                <!-- Gráfico de rendimiento se inserta aquí -->
+            </div>
+            
+            <button onclick="window.globalFunctions.closeReportModal()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold hover:bg-indigo-700 transition duration-300 shadow-lg">
+                Cerrar
+            </button>
+        </div>
+    </div>
+
 </body>
 </html>
