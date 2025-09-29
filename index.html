@@ -79,17 +79,27 @@
         import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // =========================================================================
-        // Configuración de Firebase (Ya confirmada como correcta)
+        // Configuración de Firebase (Debe ser idéntica a la consola)
         // =========================================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
-            authDomain: "fir-electrolandiaiii.firebaseapp.com",
-            projectId: "fir-electrolandiaiii",
-            storageBucket: "fir-electrolandiaiii.firebasestorage.app",
-            messagingSenderId: "378459653043",
-            appId: "1:378459653043:web:2a76b998c3c5bb459d81c6"
-        };
-        // =========================================================================
+        
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
+  authDomain: "fir-electrolandiaiii.firebaseapp.com",
+  projectId: "fir-electrolandiaiii",
+  storageBucket: "fir-electrolandiaiii.firebasestorage.app",
+  messagingSenderId: "378459653043",
+  appId: "1:378459653043:web:2a76b998c3c5bb459d81c6"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+      // =========================================================================
 
         // Variables Globales y Inicialización
         let app;
@@ -160,7 +170,7 @@
         function initializeFirebase() {
             try {
                 // CORRECCIÓN CLAVE: Aseguramos que la aplicación solo se inicialice una vez.
-                // En ciertos entornos (como GitHub Pages con rutas modulares) esto puede causar el error.
+                // Esto es vital para evitar el error de configuración en entornos modulares.
                 if (getApps().length === 0) {
                     app = initializeApp(firebaseConfig);
                 } else {
