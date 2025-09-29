@@ -59,7 +59,7 @@
         <!-- Vista de Registro (Oculta por defecto) -->
         <div id="register-view" class="space-y-4 hidden">
             <input type="email" id="register-email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
-            <input type="password" id="register-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
+            <input type="password" id="register-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:-ring-neutral-dark focus:border-neutral-dark transition duration-150 text-neutral-dark" required>
             <button onclick="handleRegister()" class="w-full bg-neutral-dark text-white font-bold py-3 rounded-lg hover:bg-neutral-medium transition duration-200 focus:outline-none focus:ring-4 focus:ring-neutral-light shadow-lg shadow-neutral-dark/40">
                 Crear Cuenta
             </button>
@@ -78,17 +78,22 @@
         import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // =========================================================================
-        // ESTO ES LO QUE DEBES MODIFICAR para usar tu propio proyecto de Firebase:
-        // 1. Ve a tu Consola de Firebase -> Configuración del proyecto -> Tus aplicaciones.
-        // 2. Copia el objeto 'firebaseConfig' y reemplaza el objeto vacío a continuación.
+        // ¡INSERTA AQUÍ TU OBJETO firebaseConfig COMPLETO!
+        // Ejemplo:
+        // const firebaseConfig = {
+        //     apiKey: "AIzaSyC...",
+        //     authDomain: "mi-app-monocromatica.firebaseapp.com",
+        //     projectId: "mi-app-monocromatica",
+        //     // ... y el resto de los campos
+        // };
         // =========================================================================
         const firebaseConfig = {
-            apiKey: "TU_API_KEY", // Reemplazar con tu clave API
-            authDomain: "TU_PROYECTO.firebaseapp.com", // Reemplazar con tu dominio de auth
-            projectId: "tu-project-id", // Reemplazar con tu ID de proyecto
-            storageBucket: "tu-project-id.appspot.com", // Reemplazar
-            messagingSenderId: "1234567890", // Reemplazar
-            appId: "1:1234567890:web:abcdef123456", // Reemplazar
+            apiKey: "AIzaSyCu4Dtw-E92EXE4trJsRzynk13Z0zVwOmo",
+            authDomain: "fir-electrolandiaiii.firebaseapp.com",
+            projectId: "fir-electrolandiaiii",
+            storageBucket: "fir-electrolandiaiii.firebasestorage.app",
+            messagingSenderId: "378459653043",
+            appId: "1:378459653043:web:2a76b998c3c5bb459d81c6"
         };
         // =========================================================================
 
@@ -160,9 +165,7 @@
         // Función de inicialización de Firebase
         function initializeFirebase() {
             try {
-                if (!firebaseConfig.projectId || firebaseConfig.projectId === "tu-project-id") {
-                    throw new Error("Por favor, reemplaza la configuración de Firebase con la de tu propio proyecto.");
-                }
+                // Ya no hay validación, las credenciales están insertadas.
 
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
